@@ -127,8 +127,11 @@ Database画面の表示内容。**DBから自動生成しない**（説明文と
     {
       "name": "employees",
       "description": "社員名簿。退職者も残っている。",
+      "erLayout": { "x": 40, "y": 40 },        // ★ ER図での配置（下記4.1）
       "columns": [
-        { "name": "id",         "type": "INTEGER", "nullable": false, "description": "社員ID（主キー）" },
+        { "name": "id",         "type": "INTEGER", "nullable": false,
+          "key": "pk",                            // "pk" | "fk" | null
+          "description": "社員ID（主キー）" },
         { "name": "name",       "type": "TEXT",    "nullable": false, "description": "氏名" },
         { "name": "department", "type": "TEXT",    "nullable": false, "description": "所属部署" },
         { "name": "status",     "type": "TEXT",    "nullable": false,
@@ -139,12 +142,33 @@ Database画面の表示内容。**DBから自動生成しない**（説明文と
       "sampleRows": [
         { "id": 1, "name": "佐藤 健一", "department": "経理部", "status": "active", "hired_at": "2019-04-01" }
       ]
+    },
+    {
+      "name": "transactions",
+      "description": "取引記録。",
+      "erLayout": { "x": 340, "y": 40 },
+      "columns": [
+        { "name": "id",          "type": "INTEGER", "nullable": false, "key": "pk", "description": "取引ID" },
+        { "name": "employee_id", "type": "INTEGER", "nullable": false, "key": "fk",
+          "description": "実行アカウントの社員ID" }
+        // ...
+      ],
+      "sampleRows": [ /* ... */ ]
     }
   ],
+
   "relations": [
-    { "from": "transactions.employee_id", "to": "employees.id",
-      "description": "取引を実行したアカウントの社員ID" }
-  ]
+    {
+      "id": "rel-tx-emp",
+      "from": { "table": "transactions", "column": "employee_id" },
+      "to":   { "table": "employees",    "column": "id" },
+      "cardinality": "many-to-one",           // "many-to-one" | "one-to-many" | "one-to-one"
+      "label": "実行したアカウント",            // ★ ER図の線に添えるラベル
+      "description": "取引を実行したアカウントの社員ID"
+    }
+  ],
+
+  "erCanvas": { "width": 640, "height": 460 }  // ★ ER図のビューボックス
 }
 ```
 
@@ -156,6 +180,39 @@ epoch秒なのかが分からないとプレイヤーは詰む。実データか
 （それ自体は健全な捜査だが、全列でやらせるのは不親切）。
 
 `type` は SQLite の宣言型をそのまま書く。日時列は `TEXT` であることを隠さない。
+
+`key` は ER図の箱に表示する主キー／外部キーの印。`"pk"` / `"fk"` / 省略（通常列）。
+
+### 4.1 ER図のレイアウト
+
+ER図は **CASEデータが座標を持ち、アプリはそのとおりに描くだけ**にする。自動レイアウトは使わない。
+
+理由:
+
+- テーブル数が4〜6程度なので、**作者が読みやすい配置を決めた方が確実によい**。
+  自動レイアウト（dagre / elkjs 等）は依存を増やすうえ、線が交差した図を毎回引き当てる
+- 座標が固定なら、CASEを変えない限り**図は毎回同じに描かれる**。
+  スクリーンショットでのレビューやE2Eテストが安定する
+- 「配置が汚い」はデータの修正で直せる。コードを直す必要がない
+
+規約:
+
+- `erLayout.x` / `erLayout.y` は箱の左上角。単位はSVGのユーザー座標
+- 箱のサイズは**アプリが内容（テーブル名 + PK/FK行数）から算出**する。データ側では持たない
+- `erCanvas` はビューボックス全体のサイズ。全テーブルが収まる値を作者が指定する
+- **ER図に描く列は `key` が `"pk"` / `"fk"` の列のみ。** 全列を描くと図が破綻する
+
+### 4.2 ER図の検証
+
+CASE検証テストで以下を自動チェックする（[§8](#8-case追加時のチェックリスト)）:
+
+- `relations` の `from` / `to` が実在するテーブル・カラムを指している
+- `key: "fk"` の列がすべて `relations` に登場する（FKの描き漏れ防止）
+- `relations` に登場する列の `key` が `"fk"` / `"pk"` になっている
+- すべてのテーブルの `erLayout` が `erCanvas` の内側にある
+- **`schema.json` のテーブル・カラムが実際の `database.sqlite` と一致している**
+  （`PRAGMA table_info` と突き合わせる。説明文の乖離は防げないが、
+  存在しない列を書いてしまう事故は防げる）
 
 ---
 
@@ -313,6 +370,10 @@ epoch秒なのかが分からないとプレイヤーは詰む。実データか
 - [ ] `seed.sql` を書き、`build-case-db.mjs` で `database.sqlite` を生成した
 - [ ] `metadata.json` の `version` を上げた（既存CASEの変更時）
 - [ ] `schema.json` の `sampleRows` が実データと一致している
+- [ ] `schema.json` のテーブル・カラムが `database.sqlite` と一致している（自動検証あり）
+- [ ] すべてのFK列に `key: "fk"` が付き、`relations` に対応する定義がある
+- [ ] `erLayout` / `erCanvas` を指定し、**実際に描画して線が交差していないことを目視した**
+- [ ] すべての `relations` に日本語の `label` がある
 - [ ] すべてのObjectiveに `checks` がある
 - [ ] すべてのObjectiveに3段階のヒントがある
 - [ ] Objectiveの `prerequisites` がDAGになっている（循環がない）

@@ -14,6 +14,7 @@
 | [architecture.md](./architecture.md) | ✅ |
 | [case-format.md](./case-format.md) | ✅ |
 | [adr/](./adr/) 0001–0004 | ✅ |
+| [adr/0005](./adr/0005-ui-styling.md)（UI方針） | 🟡 Proposed — 承認待ち |
 | [cases/case-001.md](./cases/case-001.md)（CASE 001仕様） | ✅ |
 | [AGENTS.md](../AGENTS.md) | ✅ |
 | [mvp-issues.md](./mvp-issues.md)（依存関係順のIssue分解） | ✅ |
@@ -45,7 +46,9 @@
 
 **目的**: 4画面の骨格。ゲームロジックはまだ入れない。
 
+- デザイントークン（`styles/tokens.css`）と Base UI 導入（[ADR-0005](./adr/0005-ui-styling.md)）
 - Story / Database / SQL Editor / Result のレイアウト
+- **ER図ビューア**（`schema.json` からインラインSVG）
 - CodeMirror 6 導入（難航したら textarea にフォールバック → [ADR-0003](./adr/0003-editor.md)）
 - 結果表（NULL表示、行数上限、実行時間）
 - SQLエラーの日本語化（`errorMap.ts`）
@@ -54,6 +57,7 @@
 - レスポンシブ（デスクトップ2カラム / モバイルタブ）
 
 **完了条件**: ダミーCASEデータで、自由にSQLを書いて結果とエラーを確認できる。
+ER図が描画され、テーブルをクリックすると詳細が開く。
 
 ---
 
@@ -126,6 +130,7 @@ MVPの完了条件（引き継ぎ資料 §16 に対応）。
 - [ ] CASEを開始できる
 - [ ] 事件ストーリーを読める
 - [ ] テーブル・カラム情報を確認できる
+- [ ] **ER図でテーブル間のリレーションを確認できる**
 - [ ] SQLを書いて実行できる
 - [ ] SQL結果を表形式で確認できる
 - [ ] SQLエラーを理解可能な形で表示できる
@@ -144,3 +149,4 @@ MVPの完了条件（引き継ぎ資料 §16 に対応）。
 - [ ] リロードしても進捗が復元される
 - [ ] CASEデータ変更時に、古いセーブで詰まない（version破棄が機能する）
 - [ ] CASE検証テストがCIで走っている
+- [ ] `schema.json` と実DBの不一致がCIで検出される

@@ -99,7 +99,9 @@ PostgreSQLでも表現できる形に正規化してから返す。
 | 状態管理 | React標準（useReducer + Context） | Redux/Zustand等は入れない。状態はCASE進行のみで小さい |
 | ルーティング | なし（MVPは単一画面） | 複数CASE時に react-router を検討 |
 | SQLエディタ | CodeMirror 6 (`@codemirror/lang-sql`) | textarea でも可。[ADR-0003](./adr/0003-editor.md) |
-| スタイル | CSS Modules | UIライブラリは入れない |
+| スタイル | CSS Modules + デザイントークン | [ADR-0005](./adr/0005-ui-styling.md) |
+| UIプリミティブ | Base UI（ヘッドレス） | Dialog/Tabs/Tooltip/Toast **のみ**。フルコンポーネントライブラリは入れない |
+| ER図 | インラインSVG（自作） | 図ライブラリ・自動レイアウトは入れない |
 | Test | Vitest（unit） + Playwright（E2E、Phase 5） | |
 | Lint/Format | ESLint + Prettier | |
 | Hosting | 静的ホスティング（S3+CloudFront / Cloudflare Pages 等） | |
@@ -147,9 +149,13 @@ PostgreSQLでも表現できる形に正規化してから返す。
 │       │   ├── App.tsx
 │       │   ├── StoryPanel/
 │       │   ├── DatabasePanel/
+│       │   │   ├── ErDiagram/       # schema.json から インラインSVG で描画
+│       │   │   └── TableDetail/
 │       │   ├── SqlEditor/
 │       │   ├── ResultTable/
 │       │   └── FinalAnswer/
+│       ├── styles/
+│       │   └── tokens.css        # 色・間隔・フォントのCSSカスタムプロパティ
 │       ├── state/
 │       │   └── gameReducer.ts    # UI状態 = progression の薄いラッパー
 │       └── main.tsx
@@ -256,6 +262,29 @@ CASE DBは数百KB規模なので、`ArrayBuffer` をmain thread側に保持し�
 
 ---
 
+## 8.5 ER図の描画
+
+`schema.json` の `tables[].erLayout` / `relations` / `erCanvas` を読み、
+**インラインSVGを自前で描く**。図ライブラリも自動レイアウトも入れない。
+
+```
+schema.json ──┬─ tables[].erLayout {x,y}      → 箱の位置
+              ├─ tables[].columns[].key       → 箱に描くPK/FK行
+              ├─ relations[]                  → 線 + クロウズフット記号 + ラベル
+              └─ erCanvas {width,height}      → SVG viewBox
+```
+
+- 箱のサイズは**テーブル名とPK/FK行数から算出**する（データ側では持たない）
+- 線のルーティングは **直交折れ線（L字）** で十分。ベジエは使わない
+- SVGなので**拡大しても劣化しない**。モバイルは `viewBox` を操作してピンチズーム／パン
+- 箱クリック → テーブル詳細へ。線ホバー → 両端カラムをハイライト
+- 純粋に `schema.json` の関数なので、**スナップショットテストで描画を固定できる**
+
+理由は [case-format.md §4.1](./case-format.md#41-er図のレイアウト) を参照。
+要するにテーブル数が少なく、作者が座標を決めた方が確実に読みやすい図になる。
+
+---
+
 ## 9. PostgreSQL移行の道筋（MVPでは実装しない）
 
 将来サーバー実行に切り替える場合に触る場所:
@@ -283,7 +312,7 @@ CASE DBは数百KB規模なので、`ArrayBuffer` をmain thread側に保持し�
 |---|---|---|
 | game core | Vitest（Node） | 判定・正規化・進行DAG・エラーマップ・セーブ。**WASM不要で高速** |
 | engine | Vitest（Node + sql.js） | ガード、タイムアウト、結果正規化。sql.jsはNodeでも動く |
-| CASE検証 | Vitest（Node + sql.js） | **各Objectiveについて、複数の書き方のSQLが同じ判定結果になること**（下記） |
+| CASE検証 | Vitest（Node + sql.js） | **各Objectiveについて、複数の書き方のSQLが同じ判定結果になること**（下記）、および `schema.json` と実DBの一致・ER図定義の整合性 |
 | UI | Playwright（Phase 5） | 開始→クリアの通しシナリオ1本 |
 
 ### CASE検証テストが最重要

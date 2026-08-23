@@ -27,11 +27,92 @@
 
 ## 2. テーブル設計
 
+### ER図
+
+```mermaid
+erDiagram
+    employees ||--o{ transactions : "実行したアカウント"
+    employees ||--o{ login_logs   : "ログインを試みたアカウント"
+    employees ||--o{ access_logs  : "入退室した社員"
+
+    employees {
+        INTEGER id PK
+        TEXT    name
+        TEXT    department
+        TEXT    status
+        TEXT    hired_at
+    }
+    transactions {
+        INTEGER id PK
+        INTEGER employee_id FK
+        INTEGER amount
+        TEXT    destination_account
+        TEXT    occurred_at
+        TEXT    memo
+    }
+    login_logs {
+        INTEGER id PK
+        INTEGER employee_id FK
+        TEXT    ip_address
+        TEXT    occurred_at
+        TEXT    result
+    }
+    access_logs {
+        INTEGER id PK
+        INTEGER employee_id FK
+        TEXT    gate
+        TEXT    direction
+        TEXT    occurred_at
+    }
+```
+
+**構造は意図的に単純にする。** `employees` を中心とした3本の 1対多 のみ。
+
+- 導入CASEなので、**ER図の読み方を覚えること自体が学習**になる。
+  中間テーブルや複合キーはCASE 002以降に回す
+- 3本のFKがすべて `employees.id` を指すため、
+  「どのログも `employees` と JOIN すれば人物名が出る」という
+  **一つのパターンを繰り返し使う**構成になる。導入として狙いどおり
+
+**プレイヤーがER図から得るべき気づき**:
+
+- `transactions` には人物名がない。名前を知るには `employees` と繋ぐ必要がある（→ obj-02）
+- `login_logs` と `access_logs` も同じ `employees.id` で繋がる。
+  つまり **「同じ人物の、別の側面の記録」** を突き合わせられる（→ obj-04, obj-05）
+- `login_logs.ip_address` はどのテーブルとも繋がっていない。
+  **リレーションのない列は、値そのもので突き合わせるしかない**（→ obj-06 の伏線）
+
+最後の点が重要で、ER図に線がないからこそ obj-06（同じIPを使ったのは誰か）が
+「JOINでは辿れない、値で照合する」という一段違う思考を要求する。
+
+### アプリ内での描画
+
+上記のmermaidは**ドキュメント用**。アプリ内のER図は `schema.json` の
+`erLayout` / `relations` から**インラインSVGで描画**する
+（[case-format.md §4.1](../case-format.md#41-er図のレイアウト)）。
+レイアウト案:
+
+```
+   ┌──────────────┐
+   │ transactions │
+   └──────┬───────┘
+          │
+   ┌──────┴───────┐        ┌─────────────┐
+   │  employees   │────────│ login_logs  │
+   └──────┬───────┘        └─────────────┘
+          │
+   ┌──────┴───────┐
+   │ access_logs  │
+   └──────────────┘
+```
+
+`employees` を中央に置き、3テーブルを放射状に配置する。線が交差しない。
+
 ### employees（社員名簿）
 
 | 列 | 型 | 説明 |
 |---|---|---|
-| `id` | INTEGER | 社員ID（主キー） |
+| `id` | INTEGER | 社員ID（主キー, `key: "pk"`） |
 | `name` | TEXT | 氏名 |
 | `department` | TEXT | 所属部署 |
 | `status` | TEXT | `'active'` / `'retired'` |
@@ -44,7 +125,7 @@
 | 列 | 型 | 説明 |
 |---|---|---|
 | `id` | INTEGER | 取引ID（主キー） |
-| `employee_id` | INTEGER | 実行アカウントの社員ID → `employees.id` |
+| `employee_id` | INTEGER | 実行アカウントの社員ID → `employees.id`（`key: "fk"`） |
 | `amount` | INTEGER | 金額（円） |
 | `destination_account` | TEXT | 送金先口座 |
 | `occurred_at` | TEXT | 実行日時 `'YYYY-MM-DD HH:MM:SS'` |
@@ -61,7 +142,7 @@
 | 列 | 型 | 説明 |
 |---|---|---|
 | `id` | INTEGER | 主キー |
-| `employee_id` | INTEGER | ログインを試みたアカウント → `employees.id` |
+| `employee_id` | INTEGER | ログインを試みたアカウント → `employees.id`（`key: "fk"`） |
 | `ip_address` | TEXT | 接続元IP（社内端末の固定IP） |
 | `occurred_at` | TEXT | 日時 `'YYYY-MM-DD HH:MM:SS'` |
 | `result` | TEXT | `'success'` / `'failure'` |
@@ -83,7 +164,7 @@
 | 列 | 型 | 説明 |
 |---|---|---|
 | `id` | INTEGER | 主キー |
-| `employee_id` | INTEGER | → `employees.id` |
+| `employee_id` | INTEGER | → `employees.id`（`key: "fk"`） |
 | `gate` | TEXT | ゲート名（`'main'` / `'back'`） |
 | `direction` | TEXT | `'in'` / `'out'` |
 | `occurred_at` | TEXT | 日時 `'YYYY-MM-DD HH:MM:SS'` |
@@ -152,6 +233,7 @@ obj-01 → obj-02 → obj-03 → obj-04 → obj-05 ─┬→ obj-06 ─┐
 
 **入れないもの**: 解決に無関係な追加テーブル。テーブル数が増えるほど
 Database画面の探索コストが上がり、30〜60分に収まらなくなる。**4テーブルを上限とする。**
+ER図の可読性の面でも、放射状に線が交差せず描ける上限がこのあたりになる。
 
 ---
 
