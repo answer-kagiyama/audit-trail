@@ -1,5 +1,8 @@
 /**
- * テスト・PoC 用の小さな SQLite DB を生成する。
+ * engine 層のテスト用の小さな SQLite DB を生成する。
+ *
+ * アプリが読むのは cases/case-001（sync-cases.mjs が public/ へ複製する）。
+ * こちらは SQL 実行そのものを試すための最小データで、事件とは無関係。
  *
  * Phase 3 の tools/build-case-db.mjs（Issue #15）と同じ考え方の縮小版:
  * SQL が正であり、.sqlite は生成物。生成物は git に入れない。
@@ -75,7 +78,7 @@ db.run(SEED);
 const bytes = Buffer.from(db.export());
 db.close();
 
-for (const relative of ['src/test/fixtures/demo.sqlite', 'public/fixtures/demo.sqlite']) {
+for (const relative of ['src/test/fixtures/demo.sqlite']) {
   const target = resolve(root, relative);
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, bytes);
@@ -303,7 +306,7 @@ const SCHEMA = {
   erCanvas: { width: 800, height: 500 },
 };
 
-for (const relative of ['src/test/fixtures/demo-schema.json', 'public/fixtures/demo-schema.json']) {
+for (const relative of ['src/test/fixtures/demo-schema.json']) {
   const target = resolve(root, relative);
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, `${JSON.stringify(SCHEMA, null, 2)}\n`);

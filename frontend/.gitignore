@@ -4,6 +4,7 @@ coverage
 *.local
 .DS_Store
 
-# 生成物（scripts/make-fixtures.mjs が作る）
+# 生成物
 src/test/fixtures/
 public/fixtures/
+public/cases/

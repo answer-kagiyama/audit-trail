@@ -1,0 +1,178 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.65);
+  z-index: 50;
+}
+
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 51;
+  width: min(46rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 3rem);
+  overflow: auto;
+  background: var(--surface-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.title {
+  color: var(--accent);
+  font-size: var(--text-lg);
+  letter-spacing: 0.04em;
+}
+
+.lead {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/* ネイティブ select で足りるものにプリミティブは使わない（ADR-0005）。 */
+.select {
+  appearance: none;
+  width: 100%;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.select:hover {
+  border-color: var(--accent);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.submit {
+  appearance: none;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-5);
+  cursor: pointer;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cancel {
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+}
+
+.cancel:hover {
+  color: var(--text-primary);
+}
+
+/* 不正解。どこが違うかは言わない。 */
+.rejected {
+  border-left: 3px solid var(--danger);
+  padding-left: var(--space-3);
+  color: var(--danger);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+/* --- クリア画面 ----------------------------------------------------------- */
+.cleared {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.clearedBadge {
+  align-self: flex-start;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  letter-spacing: 0.2em;
+  padding: var(--space-1) var(--space-3);
+}
+
+.epilogue {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  white-space: pre-wrap;
+}
+
+.epilogue strong {
+  color: var(--accent-strong);
+}
+
+.record {
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.recordItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.recordLabel {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.recordValue {
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}

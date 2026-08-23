@@ -1,12 +1,10 @@
 /**
  * CASEデータのTS型。JSONの構造と1対1に対応させる。
  *
- * Phase 2 の時点では schema.json 相当だけを定義する。
- * story / hints / solution とローダー・検証は Issue #21, #22 で足す。
- *
  * @see docs/case-format.md
  */
 import type { SqlValue } from '../engine/types.ts';
+import type { Check, FinalAnswerSpec } from './checks.ts';
 
 /** ER図の箱に描く印。通常列は付けない。 */
 export type ColumnKey = 'pk' | 'fk';
@@ -59,4 +57,97 @@ export interface SchemaDoc {
 
 export function findTable(schema: SchemaDoc, name: string): TableDoc | undefined {
   return schema.tables.find((table) => table.name === name);
+}
+
+// --- metadata.json ----------------------------------------------------------
+
+export interface CaseMetadata {
+  id: string;
+  /**
+   * セーブ互換性のキー。CASEデータを変えたら必ず上げる。
+   * 据え置くと、古いセーブを持つプレイヤーが詰む。
+   */
+  version: number;
+  title: string;
+  subtitle: string;
+  difficulty: number;
+  estimatedMinutes: [number, number];
+  sqlConcepts: string[];
+  dialect: 'sqlite' | 'postgres';
+  files: {
+    story: string;
+    schema: string;
+    hints: string;
+    solution: string;
+    database: string;
+  };
+}
+
+// --- story.json -------------------------------------------------------------
+
+export interface ObjectiveDoc {
+  id: string;
+  title: string;
+  /** 「何を知りたいか」を書く。「どう書くか」はヒント側の役割。 */
+  brief: string;
+  /** これが全て完了すると active になる。空なら開始時から active。 */
+  prerequisites: string[];
+  rewards: { evidence: string[]; storyBeats: string[] };
+}
+
+export interface EvidenceDoc {
+  id: string;
+  title: string;
+  body: string;
+}
+
+export interface StoryBeatDoc {
+  id: string;
+  body: string;
+}
+
+export interface StoryDoc {
+  prologue: { title: string; body: string };
+  objectives: ObjectiveDoc[];
+  evidence: EvidenceDoc[];
+  storyBeats: StoryBeatDoc[];
+  epilogue: { title: string; body: string };
+}
+
+// --- solution.json / hints.json ---------------------------------------------
+
+export interface SolutionDoc {
+  checks: Record<string, Check[]>;
+  finalAnswer: FinalAnswerSpec;
+}
+
+export interface HintDoc {
+  level: number;
+  body: string;
+}
+
+export type HintsDoc = Record<string, HintDoc[]>;
+
+// --- 読み込み済みの CASE 一式 -------------------------------------------------
+
+export interface CaseData {
+  metadata: CaseMetadata;
+  schema: SchemaDoc;
+  story: StoryDoc;
+  solution: SolutionDoc;
+  hints: HintsDoc;
+  /** CASE DB のバイト列。SqlEngine.loadDatabase に渡す。 */
+  database: ArrayBuffer;
+}
+
+export function findObjective(story: StoryDoc, id: string): ObjectiveDoc | undefined {
+  return story.objectives.find((objective) => objective.id === id);
+}
+
+export function findEvidence(story: StoryDoc, id: string): EvidenceDoc | undefined {
+  return story.evidence.find((item) => item.id === id);
+}
+
+export function findStoryBeat(story: StoryDoc, id: string): StoryBeatDoc | undefined {
+  return story.storyBeats.find((item) => item.id === id);
 }
