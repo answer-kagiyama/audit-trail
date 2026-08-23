@@ -73,6 +73,14 @@
   color: var(--text-secondary);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
+  white-space: pre-wrap;
+}
+
+/* brief 内の強調は「情報が2箇所に分かれている」ことの指摘に使う。
+   目立たせないと、そこが読み飛ばされて JOIN に気づけない。 */
+.objectiveBrief strong {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .hintList {

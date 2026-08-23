@@ -1,0 +1,158 @@
+.layer {
+  position: fixed;
+  inset-inline: 0;
+  top: var(--space-5);
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  padding-inline: var(--space-4);
+  /* 背後のクリックを妨げない。捜査を止めない演出にする。 */
+  pointer-events: none;
+}
+
+.card {
+  pointer-events: auto;
+  width: min(34rem, 100%);
+  background: var(--surface-panel);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popup);
+  overflow: hidden;
+  cursor: pointer;
+  animation: enter 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--accent-dim);
+  border-bottom: 1px solid var(--accent);
+}
+
+.badge {
+  font-size: var(--text-xs);
+  letter-spacing: 0.2em;
+  color: var(--accent-strong);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.objectiveTitle {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.body {
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.evidenceLabel {
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.evidenceList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.evidenceItem {
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.evidenceItem::before {
+  content: '＋ ';
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ストーリー断片がこの演出の主役。証拠の獲得より、
+   「その事実が何を意味するか」の一行がプレイヤーを次へ進ませる。 */
+.beat {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  font-style: italic;
+  border-left: 2px solid var(--accent);
+  padding-left: var(--space-3);
+  white-space: pre-wrap;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-1);
+}
+
+.next {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.nextTitle {
+  color: var(--accent);
+}
+
+.dismiss {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* 残り時間のバー。勝手に消えることを予告する。 */
+.timer {
+  height: 2px;
+  background: var(--accent);
+  animation: shrink var(--dwell) linear forwards;
+  transform-origin: left;
+}
+
+@keyframes shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+
+  .timer {
+    animation: none;
+    transform: scaleX(1);
+  }
+}

@@ -26,6 +26,20 @@
   color: var(--text-muted);
 }
 
+.headerActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* 狭い画面では説明文を落として、テーマ切替の場所を確保する。 */
+@media (max-width: 560px) {
+  .subtitle {
+    display: none;
+  }
+}
+
 /* --- デスクトップ: 2カラム ---------------------------------------------- */
 .wide {
   display: grid;

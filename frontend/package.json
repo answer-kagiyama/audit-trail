@@ -9,6 +9,8 @@
     "cases:check": "node ../tools/build-case-db.mjs --check ../cases/case-001",
     "cases:sync": "node scripts/sync-cases.mjs",
     "dev": "vite",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
     "fixtures": "node scripts/make-fixtures.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -35,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
