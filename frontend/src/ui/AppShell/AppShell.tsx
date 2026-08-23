@@ -10,6 +10,8 @@
 import { Tabs } from '@base-ui/react/tabs';
 import type { ReactNode } from 'react';
 import { useMediaQuery } from '../hooks/useMediaQuery.ts';
+import { ThemeToggle } from '../ThemeToggle/ThemeToggle.tsx';
+import type { ThemePreference } from '../ThemeToggle/theme.ts';
 import styles from './AppShell.module.css';
 
 export interface AppShellProps {
@@ -17,12 +19,14 @@ export interface AppShellProps {
   database: ReactNode;
   editor: ReactNode;
   result: ReactNode;
+  theme: ThemePreference;
+  onThemeChange: (next: ThemePreference) => void;
 }
 
 /** tokens.css の --breakpoint-wide と揃えること。 */
 const WIDE_QUERY = '(min-width: 900px)';
 
-export function AppShell({ story, database, editor, result }: AppShellProps) {
+export function AppShell({ story, database, editor, result, theme, onThemeChange }: AppShellProps) {
   const isWide = useMediaQuery(WIDE_QUERY);
 
   return (
@@ -30,6 +34,9 @@ export function AppShell({ story, database, editor, result }: AppShellProps) {
       <header className={styles.header}>
         <h1 className={styles.title}>Audit Trail</h1>
         <span className={styles.subtitle}>記録は、誰が何をしたかを覚えている。</span>
+        <div className={styles.headerActions}>
+          <ThemeToggle preference={theme} onChange={onThemeChange} />
+        </div>
       </header>
 
       {isWide ? (

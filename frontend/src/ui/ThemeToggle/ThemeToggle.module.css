@@ -1,0 +1,35 @@
+.group {
+  display: inline-flex;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-base);
+}
+
+.option {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1;
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.option + .option {
+  border-left: 1px solid var(--border-subtle);
+}
+
+.option:hover {
+  color: var(--text-primary);
+}
+
+.option[aria-pressed='true'] {
+  background: var(--accent-dim);
+  color: var(--accent-strong);
+}

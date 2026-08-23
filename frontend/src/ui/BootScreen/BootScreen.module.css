@@ -30,6 +30,8 @@
 
 .detail {
   margin: 0;
+  max-height: 40vh;
+  overflow: auto;
   padding: var(--space-3);
   background: var(--surface-sunken);
   border: 1px solid var(--border-subtle);
@@ -39,4 +41,61 @@
   text-align: left;
   white-space: pre-wrap;
   overflow-x: auto;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-2);
+}
+
+.retry {
+  appearance: none;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-5);
+  cursor: pointer;
+}
+
+.retry:hover {
+  background: var(--accent-strong);
+}
+
+/* 進行中であることだけを示す不定形バー。実際の進捗は測れない。 */
+.progressTrack {
+  height: 2px;
+  width: 12rem;
+  margin: 0 auto;
+  background: var(--surface-raised);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  width: 40%;
+  background: var(--accent);
+  animation: slide 1.4s ease-in-out infinite;
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressBar {
+    animation: none;
+    width: 100%;
+    opacity: 0.5;
+  }
 }

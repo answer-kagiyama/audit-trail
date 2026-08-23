@@ -6,13 +6,24 @@
  */
 import { useState } from 'react';
 import { Tabs } from '@base-ui/react/tabs';
-import type { SchemaDoc } from '../../game/caseTypes.ts';
+import type { Cardinality, SchemaDoc } from '../../game/caseTypes.ts';
 import { Panel } from '../Panel/Panel.tsx';
 import { ErDiagram } from './ErDiagram/ErDiagram.tsx';
 import { TableDetail } from './TableDetail/TableDetail.tsx';
 import styles from './DatabasePanel.module.css';
 
 type View = 'er' | 'detail';
+
+function cardinalityLabel(cardinality: Cardinality): string {
+  switch (cardinality) {
+    case 'many-to-one':
+      return '多対1';
+    case 'one-to-many':
+      return '1対多';
+    case 'one-to-one':
+      return '1対1';
+  }
+}
 
 export function DatabasePanel({ schema }: { schema: SchemaDoc }) {
   const [view, setView] = useState<View>('er');
@@ -53,6 +64,30 @@ export function DatabasePanel({ schema }: { schema: SchemaDoc }) {
             <span className={styles.legendItem}>三又の先 = 多側</span>
             <span className={styles.legendItem}>箱をクリックで詳細</span>
           </div>
+
+          {/*
+            図の代替表現。スクリーンリーダー利用者や、図が読み取りにくい人にも
+            リレーションが伝わるようにする。折りたたみなので通常は邪魔にならない。
+          */}
+          <details className={styles.relationList}>
+            <summary className={styles.relationSummary}>
+              リレーションを文章で読む（{schema.relations.length} 件）
+            </summary>
+            <ul>
+              {schema.relations.map((relation) => (
+                <li key={relation.id}>
+                  <code>
+                    {relation.from.table}.{relation.from.column}
+                  </code>{' '}
+                  は{' '}
+                  <code>
+                    {relation.to.table}.{relation.to.column}
+                  </code>{' '}
+                  を指す（{cardinalityLabel(relation.cardinality)}）— {relation.label}
+                </li>
+              ))}
+            </ul>
+          </details>
         </Tabs.Panel>
 
         <Tabs.Panel value="detail" className={styles.panel}>

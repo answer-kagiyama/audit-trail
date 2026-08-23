@@ -81,7 +81,7 @@ export function StoryPanel({
               return (
                 <div key={objective.id} className={styles.objective}>
                   <h4 className={styles.objectiveTitle}>{objective.title}</h4>
-                  <p className={styles.objectiveBrief}>{objective.brief}</p>
+                  <Prose className={styles.objectiveBrief} text={objective.brief} />
 
                   {hints.length > 0 && (
                     <ul className={styles.hintList}>

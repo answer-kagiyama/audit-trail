@@ -10,6 +10,20 @@
   </head>
   <body>
     <div id="root"></div>
+    <!--
+      React のマウントを待つと一瞬ライトが見えてしまう（既定がダークのため）。
+      保存済みの選択をここで先に反映する。src/ui/ThemeToggle/theme.ts と同じ規則。
+    -->
+    <script>
+      try {
+        var pref = localStorage.getItem('audit-trail:theme') || 'dark';
+        if (pref === 'light' || pref === 'dark') {
+          document.documentElement.setAttribute('data-theme', pref);
+        }
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

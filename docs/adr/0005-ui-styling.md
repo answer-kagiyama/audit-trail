@@ -1,6 +1,6 @@
 # ADR-0005: CSS Modules + ヘッドレスUIプリミティブ（Base UI）を採用する
 
-- 状態: **Accepted**
+- 状態: **Accepted**（「単一テーマに固定する」の一点のみ [ADR-0006](./0006-theme-switching.md) が上書き）
 - 日付: 2026-08-23（承認: 2026-08-23）
 - 関連: [ADR-0003](./0003-editor.md)
 

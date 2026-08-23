@@ -8,3 +8,8 @@ coverage
 src/test/fixtures/
 public/fixtures/
 public/cases/
+
+# Playwright
+test-results
+playwright-report
+blob-report

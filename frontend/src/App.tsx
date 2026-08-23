@@ -8,11 +8,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { WorkerSqlEngine, browserWorkerFactory } from './engine/workerEngine.ts';
 import type { SqlEngine } from './engine/types.ts';
 import { isSqlExecutionError } from './engine/types.ts';
-import { loadCaseData } from './game/caseLoader.ts';
+import { CaseDataError, loadCaseData } from './game/caseLoader.ts';
 import type { CaseData } from './game/caseTypes.ts';
+import { findEvidence, findStoryBeat } from './game/caseTypes.ts';
 import { buildSchemaHints, toFriendlyError } from './game/errorMap.ts';
 import type { SchemaHints } from './game/errorMap.ts';
 import {
+  activeObjectives,
+  allObjectivesCompleted,
   applyQueryResult,
   initialProgress,
   revealHint,
@@ -24,10 +27,13 @@ import { AppShell } from './ui/AppShell/AppShell.tsx';
 import { BootScreen } from './ui/BootScreen/BootScreen.tsx';
 import { DatabasePanel } from './ui/DatabasePanel/DatabasePanel.tsx';
 import { FinalAnswerDialog } from './ui/FinalAnswer/FinalAnswer.tsx';
+import { ObjectiveCleared } from './ui/ObjectiveCleared/ObjectiveCleared.tsx';
+import type { ClearedAnnouncement } from './ui/ObjectiveCleared/ObjectiveCleared.tsx';
 import { ResultPanel } from './ui/ResultTable/ResultTable.tsx';
 import type { ResultState } from './ui/ResultTable/ResultTable.tsx';
 import { SqlEditor } from './ui/SqlEditor/SqlEditor.tsx';
 import { StoryPanel } from './ui/StoryPanel/StoryPanel.tsx';
+import { useTheme } from './ui/ThemeToggle/useTheme.ts';
 
 /** MVP は1CASEのみ。CASE選択画面は非範囲（docs/vision.md §5）。 */
 const CASE_ID = 'case-001';
@@ -44,6 +50,27 @@ interface Loaded {
   hints: SchemaHints;
 }
 
+/**
+ * 起動失敗の切り分け。
+ *
+ * 「読み込めませんでした」だけでは、ネットワークの問題なのか、
+ * CASEデータが壊れているのか、ブラウザが対応していないのかが分からない。
+ * 直せる人が直せる形で出す（docs/mvp-issues.md #29）。
+ */
+function describeBootFailure(error: unknown): string {
+  if (error instanceof CaseDataError) {
+    return `事件データが不正です。\n\n場所: ${error.path}\n${error.message}`;
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  if (/WebAssembly|wasm/i.test(message)) {
+    return `SQL実行エンジンを起動できませんでした。\nこのブラウザが WebAssembly に対応していない可能性があります。\n\n${message}`;
+  }
+  if (/HTTP|fetch|NetworkError|Failed to fetch/i.test(message)) {
+    return `事件データを取得できませんでした。\n通信状況を確認して再読み込みしてください。\n\n${message}`;
+  }
+  return message;
+}
+
 export function App() {
   const engineRef = useRef<SqlEngine | null>(null);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
@@ -54,6 +81,8 @@ export function App() {
   const [history, setHistory] = useState<string[]>([]);
   const [justEarned, setJustEarned] = useState<readonly string[]>([]);
   const [finalOpen, setFinalOpen] = useState(false);
+  const [cleared, setCleared] = useState<ClearedAnnouncement | null>(null);
+  const { preference: theme, setPreference: setTheme } = useTheme();
 
   useEffect(() => {
     const engine = new WorkerSqlEngine(browserWorkerFactory);
@@ -74,7 +103,7 @@ export function App() {
         setProgress(restored.kind === 'loaded' ? restored.progress : initialProgress(Date.now()));
         setLoaded({ caseData, hints: buildSchemaHints(caseData.schema.tables) });
       } catch (e) {
-        if (!cancelled) setBootError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) setBootError(describeBootFailure(e));
       }
     })();
 
@@ -111,6 +140,30 @@ export function App() {
         const outcome = applyQueryResult(loaded.caseData, progress, queryResult);
         commit(outcome.state);
         setJustEarned(outcome.newEvidence);
+
+        const first = outcome.completedObjectives[0];
+        if (first) {
+          const story = loaded.caseData.story;
+          const next = activeObjectives(loaded.caseData, outcome.state)[0];
+          setCleared({
+            // 同じ状態で二重に出さないよう、達成した Objective の並びを鍵にする。
+            id: outcome.completedObjectives.map((o) => o.id).join('+'),
+            objectiveTitle:
+              outcome.completedObjectives.length === 1
+                ? first.title
+                : `${first.title} ほか${String(outcome.completedObjectives.length - 1)}件`,
+            evidenceTitles: outcome.newEvidence.flatMap((id) => {
+              const item = findEvidence(story, id);
+              return item ? [item.title] : [];
+            }),
+            beats: outcome.newStoryBeats.flatMap((id) => {
+              const item = findStoryBeat(story, id);
+              return item ? [item.body] : [];
+            }),
+            nextObjectiveTitle: next?.title,
+            allCleared: allObjectivesCompleted(loaded.caseData, outcome.state),
+          });
+        }
       } catch (e) {
         if (!isSqlExecutionError(e)) throw e;
         setResult({ kind: 'error', error: toFriendlyError(e, loaded.hints) });
@@ -128,6 +181,7 @@ export function App() {
     setJustEarned([]);
     setNotice(undefined);
     setResult({ kind: 'idle' });
+    setCleared(null);
   }, [loaded]);
 
   const onSubmitFinalAnswer = useCallback(
@@ -168,6 +222,15 @@ export function App() {
           />
         }
         result={<ResultPanel state={result} />}
+        theme={theme}
+        onThemeChange={setTheme}
+      />
+
+      <ObjectiveCleared
+        announcement={cleared}
+        onDismiss={() => {
+          setCleared(null);
+        }}
       />
 
       <FinalAnswerDialog

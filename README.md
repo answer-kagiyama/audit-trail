@@ -8,7 +8,7 @@ SQLを学ぶこと自体が目的ではなく、SQLをゲーム内の**「調査
 > **Audit Trail**（監査証跡）— システムが残す「誰が・いつ・何をしたか」の記録。
 > プレイヤーが読み解くのは、まさにこの証跡である。
 
-> **現在のフェーズ: Phase 4（進行・判定）完了 — CASE 001 が通しで遊べます。次は Phase 5（品質）。**
+> **現在のフェーズ: Phase 5（品質）完了。Vercel にデプロイ済み。残るは Phase 6（実プレイテスト）。**
 
 ---
 
@@ -51,6 +51,7 @@ npm run lint         # 以下4つが緑になるまで完了としない（AGENT
 npm run typecheck
 npm run test
 npm run build
+npm run e2e          # Playwright（実ブラウザでの通し確認）
 ```
 
 `npm run fixtures` が PoC/テスト用の `.sqlite` を生成する（`dev`/`test`/`build` の前に自動実行）。
@@ -81,5 +82,5 @@ npm run cases:check   # コミット済みの .sqlite とのズレを検出（CI
 
 ## 次にやること
 
-[docs/mvp-issues.md](./docs/mvp-issues.md) の **#29 ローディングとエラー画面** から
-Phase 5（品質）に着手する。その後 Phase 6 で Vercel へデプロイする。
+[docs/mvp-issues.md](./docs/mvp-issues.md) の **#34 実プレイテスト**。
+SQL中級者を含む3〜5人に通しで遊んでもらい、詰まりどころを計測する。

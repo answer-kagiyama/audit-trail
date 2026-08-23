@@ -65,3 +65,29 @@
   align-items: center;
   gap: var(--space-1);
 }
+
+/* ER図の代替表現。既定は畳んでおく。 */
+.relationList {
+  flex: none;
+  padding-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.relationSummary {
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.relationList ul {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  line-height: var(--leading-normal);
+}
+
+.relationList code {
+  color: var(--accent);
+}
