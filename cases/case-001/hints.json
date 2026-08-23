@@ -1,0 +1,97 @@
+{
+  "obj-01": [
+    { "level": 1, "body": "送金の記録は transactions テーブルにあります。まずは中身を眺めてみましょう。" },
+    {
+      "level": 2,
+      "body": "件数が多いので、金額で絞り込みます。WHERE 句に amount の条件を書いてみてください。"
+    },
+    {
+      "level": 3,
+      "body": "amount >= 1000000 のように範囲で探すと、高額な取引がまとめて見つかります。そのうち深夜に実行されたものはどれでしょうか。occurred_at も一緒に表示すると分かります。"
+    }
+  ],
+
+  "obj-02": [
+    {
+      "level": 1,
+      "body": "取引記録の employee_id は、社員名簿 employees の id を指しています。ER図の線を確認してみてください。"
+    },
+    {
+      "level": 2,
+      "body": "2つのテーブルを繋いで見るには JOIN を使います。transactions と employees を employee_id と id で繋ぎます。"
+    },
+    {
+      "level": 3,
+      "body": "FROM transactions t JOIN employees e ON e.id = t.employee_id のように書き、名前と金額を並べて表示してみてください。"
+    }
+  ],
+
+  "obj-03": [
+    {
+      "level": 1,
+      "body": "ログインの記録は login_logs テーブルです。送金は 2026-03-14 02:14:33 に実行されました。"
+    },
+    {
+      "level": 2,
+      "body": "occurred_at は 'YYYY-MM-DD HH:MM:SS' 形式の文字列です。文字列として範囲を指定できます。"
+    },
+    {
+      "level": 3,
+      "body": "occurred_at LIKE '2026-03-14 02%' や、BETWEEN で 02:00:00 〜 02:15:00 を挟む書き方があります。接続元の ip_address にも注目してください。"
+    }
+  ],
+
+  "obj-04": [
+    { "level": 1, "body": "入退室の記録は access_logs テーブルです。山田 咲の社員IDは 7 です。" },
+    {
+      "level": 2,
+      "body": "彼女の記録だけに絞り、時刻順に並べてみてください。direction が 'in'（入館）か 'out'（退館）かを見ます。"
+    },
+    {
+      "level": 3,
+      "body": "WHERE employee_id = 7 で絞り、ORDER BY occurred_at DESC で新しい順に並べます。一番新しい記録は入館でしょうか、退館でしょうか。"
+    }
+  ],
+
+  "obj-05": [
+    {
+      "level": 1,
+      "body": "「在館している」とは、直近の記録が 'in' で、まだ 'out' していない状態のことです。"
+    },
+    {
+      "level": 2,
+      "body": "犯行時刻 2026-03-14 02:14:33 までの記録に絞ったうえで、社員ごとに一番新しい記録を取り出します。それが 'in' なら、その人はまだ中にいます。"
+    },
+    {
+      "level": 3,
+      "body": "社員ごとの最新時刻は GROUP BY employee_id と MAX(occurred_at) で求められます。それをサブクエリにして元の表と突き合わせ、direction = 'in' の人だけを残します。employees と JOIN して名前を出してください。"
+    }
+  ],
+
+  "obj-06": [
+    { "level": 1, "body": "login_logs の ip_address に、接続元の端末が記録されています。" },
+    {
+      "level": 2,
+      "body": "10.0.4.112 からのログインをすべて集めて、誰のアカウントが使われてきたかを見てください。"
+    },
+    {
+      "level": 3,
+      "body": "WHERE ip_address = '10.0.4.112' で絞り、employees と JOIN して名前を出します。この端末を普段使っているのは誰でしょうか。"
+    }
+  ],
+
+  "obj-07": [
+    {
+      "level": 1,
+      "body": "login_logs の result 列には 'success' だけでなく 'failure' も記録されています。"
+    },
+    {
+      "level": 2,
+      "body": "山田 咲のアカウント（employee_id = 7）について、失敗した試行を探してみてください。"
+    },
+    {
+      "level": 3,
+      "body": "WHERE employee_id = 7 AND result = 'failure' で絞り、時刻順に並べます。成功した 02:09:20 の直前に何が起きていたでしょうか。"
+    }
+  ]
+}

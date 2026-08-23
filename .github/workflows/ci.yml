@@ -27,6 +27,12 @@ jobs:
 
       - run: npm ci
 
+      # seed.sql と database.sqlite のズレを検出する。
+      # .sqlite は生成物なので、手で編集されたり再生成し忘れたりすると
+      # ここで落ちる。
+      - name: CASE DB が seed.sql と一致しているか
+        run: npm run cases:check
+
       # AGENTS.md: この4つが緑になるまで完了としない。
       - run: npm run lint
       - run: npm run typecheck

@@ -1,0 +1,195 @@
+{
+  "tables": [
+    {
+      "name": "employees",
+      "description": "社員名簿。退職者も残っている。",
+      "erLayout": { "x": 250, "y": 210 },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "社員ID（主キー）"
+        },
+        { "name": "name", "type": "TEXT", "nullable": false, "description": "氏名。姓と名の間は半角スペース。" },
+        {
+          "name": "department",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "所属部署。'経理部' / '営業部' / '人事部' / '総務部' / '情報システム部' のいずれか。"
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "在籍状況。'active'（在籍中）または 'retired'（退職済み）。"
+        },
+        {
+          "name": "hired_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "入社日。'YYYY-MM-DD' 形式の文字列。"
+        }
+      ],
+      "sampleRows": [
+        { "id": 1, "name": "佐藤 健一", "department": "経理部", "status": "active", "hired_at": "2019-04-01" },
+        { "id": 3, "name": "高橋 修", "department": "営業部", "status": "retired", "hired_at": "2016-04-01" },
+        { "id": 12, "name": "田中 誠", "department": "情報システム部", "status": "active", "hired_at": "2020-01-06" }
+      ]
+    },
+    {
+      "name": "transactions",
+      "description": "取引記録。社内経理システムからの送金がすべて残る。",
+      "erLayout": { "x": 250, "y": 30 },
+      "columns": [
+        { "name": "id", "type": "INTEGER", "nullable": false, "key": "pk", "description": "取引ID（主キー）" },
+        {
+          "name": "employee_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "送金を実行したアカウントの社員ID。employees.id を指す。"
+        },
+        { "name": "amount", "type": "INTEGER", "nullable": false, "description": "金額（円）。小数はない。" },
+        { "name": "destination_account", "type": "TEXT", "nullable": false, "description": "送金先口座番号。'ACC-' で始まる。" },
+        {
+          "name": "occurred_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "実行日時。'YYYY-MM-DD HH:MM:SS' 形式の文字列。"
+        },
+        {
+          "name": "memo",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "摘要。入力されていない取引は NULL。"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 4655,
+          "employee_id": 1,
+          "amount": 980000,
+          "destination_account": "ACC-310288",
+          "occurred_at": "2026-02-19 14:22:10",
+          "memo": "設備リース料 2月分"
+        },
+        {
+          "id": 4690,
+          "employee_id": 7,
+          "amount": 42800,
+          "destination_account": "ACC-118203",
+          "occurred_at": "2026-02-24 11:05:12",
+          "memo": "交通費精算"
+        },
+        {
+          "id": 4712,
+          "employee_id": 2,
+          "amount": 1250000,
+          "destination_account": "ACC-559140",
+          "occurred_at": "2026-03-02 10:41:55",
+          "memo": "外注費支払 2月締"
+        }
+      ]
+    },
+    {
+      "name": "login_logs",
+      "description": "社内システムへのログイン記録。失敗した試行も残る。",
+      "erLayout": { "x": 560, "y": 205 },
+      "columns": [
+        { "name": "id", "type": "INTEGER", "nullable": false, "key": "pk", "description": "主キー" },
+        {
+          "name": "employee_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "ログインを試みたアカウントの社員ID。実際に操作した人物とは限らない。"
+        },
+        {
+          "name": "ip_address",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "接続元の端末IP。社員は固定席の端末を使う。どのテーブルとも繋がっていない。"
+        },
+        {
+          "name": "occurred_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "日時。'YYYY-MM-DD HH:MM:SS' 形式の文字列。"
+        },
+        {
+          "name": "result",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "結果。'success'（成功）または 'failure'（失敗）。"
+        }
+      ],
+      "sampleRows": [
+        { "id": 8804, "employee_id": 7, "ip_address": "10.0.4.107", "occurred_at": "2026-02-26 08:59:41", "result": "failure" },
+        { "id": 8901, "employee_id": 6, "ip_address": "10.0.4.106", "occurred_at": "2026-03-12 23:41:16", "result": "success" },
+        { "id": 9001, "employee_id": 12, "ip_address": "10.0.4.112", "occurred_at": "2026-03-14 01:50:07", "result": "success" }
+      ]
+    },
+    {
+      "name": "access_logs",
+      "description": "入退室記録。オフィスのゲートを通るたびに1行増える。",
+      "erLayout": { "x": 250, "y": 390 },
+      "columns": [
+        { "name": "id", "type": "INTEGER", "nullable": false, "key": "pk", "description": "主キー" },
+        {
+          "name": "employee_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "ゲートを通った社員のID。employees.id を指す。"
+        },
+        { "name": "gate", "type": "TEXT", "nullable": false, "description": "ゲート名。'main'（正面）または 'back'（裏口）。" },
+        {
+          "name": "direction",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "通行方向。'in'（入館）または 'out'（退館）。"
+        },
+        {
+          "name": "occurred_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "日時。'YYYY-MM-DD HH:MM:SS' 形式の文字列。"
+        }
+      ],
+      "sampleRows": [
+        { "id": 7001, "employee_id": 7, "gate": "main", "direction": "in", "occurred_at": "2026-03-13 08:51:07" },
+        { "id": 7002, "employee_id": 7, "gate": "main", "direction": "out", "occurred_at": "2026-03-13 19:42:18" },
+        { "id": 7003, "employee_id": 12, "gate": "back", "direction": "in", "occurred_at": "2026-03-14 01:47:03" }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel-tx-emp",
+      "from": { "table": "transactions", "column": "employee_id" },
+      "to": { "table": "employees", "column": "id" },
+      "cardinality": "many-to-one",
+      "label": "実行したアカウント",
+      "description": "送金を実行したアカウントの持ち主。"
+    },
+    {
+      "id": "rel-login-emp",
+      "from": { "table": "login_logs", "column": "employee_id" },
+      "to": { "table": "employees", "column": "id" },
+      "cardinality": "many-to-one",
+      "label": "試みたアカウント",
+      "description": "ログインを試みたアカウントの持ち主。操作した人物とは限らない。"
+    },
+    {
+      "id": "rel-access-emp",
+      "from": { "table": "access_logs", "column": "employee_id" },
+      "to": { "table": "employees", "column": "id" },
+      "cardinality": "many-to-one",
+      "label": "入退室した社員",
+      "description": "ゲートを通った社員。"
+    }
+  ],
+  "erCanvas": { "width": 800, "height": 500 }
+}

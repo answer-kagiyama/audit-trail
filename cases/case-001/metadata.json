@@ -1,0 +1,17 @@
+{
+  "id": "case-001",
+  "version": 1,
+  "title": "消えた100万円",
+  "subtitle": "深夜の不正送金事件",
+  "difficulty": 1,
+  "estimatedMinutes": [30, 60],
+  "sqlConcepts": ["SELECT", "WHERE", "ORDER BY", "JOIN", "GROUP BY", "サブクエリ"],
+  "dialect": "sqlite",
+  "files": {
+    "story": "story.json",
+    "schema": "schema.json",
+    "hints": "hints.json",
+    "solution": "solution.json",
+    "database": "database.sqlite"
+  }
+}

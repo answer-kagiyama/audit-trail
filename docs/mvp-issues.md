@@ -125,15 +125,15 @@
 
 ---
 
-## Phase 3: CASE 001
+## Phase 3: CASE 001 ✅ 完了
 
-### #15 CASE DB ビルドツール
+### #15 CASE DB ビルドツール ✅
 - **成果物**: `tools/build-case-db.mjs`（`seed.sql` → `database.sqlite`）+
   CIでの再生成・差分検出
 - **完了条件**: コマンド1発で生成でき、コミット済みsqliteと不一致ならCIが落ちる
 - ⛔ `#2`, `#6`
 
-### #16 CASE 001 の seed.sql を作る
+### #16 CASE 001 の seed.sql を作る ✅
 - **成果物**: `cases/case-001/seed.sql`。employees(12) / transactions(~200) /
   login_logs(~400) / access_logs(~300)。
   [case-001.md §2](./cases/case-001.md#2-テーブル設計) の鍵となる行を含む
@@ -142,7 +142,7 @@
   ノイズがすべて入っている。DBサイズ1MB以下
 - ⛔ `#15`
 
-### #17 CASE 001 のメタデータとスキーマ記述（ER図定義を含む）
+### #17 CASE 001 のメタデータとスキーマ記述（ER図定義を含む） ✅
 - **成果物**: `metadata.json`, `schema.json`
 - **完了条件**:
   - `sampleRows` が実データと一致。列挙値が `description` に明記されている
@@ -152,30 +152,33 @@
   - **`schema.json` と実DBの一致を検証するテスト**（`PRAGMA table_info` と突き合わせ）
 - ⛔ `#16`
 
-### #18 CASE 001 のストーリーテキスト
+### #18 CASE 001 のストーリーテキスト ✅
 - **成果物**: `story.json`（prologue / objectives 7件 / evidence / storyBeats / epilogue）
 - **完了条件**: `brief` に「どう書くか」が書かれていない。
   epilogueが証拠を引用して真相を説明している
 - ⛔ `#17`
 
-### #19 CASE 001 の判定条件と最終回答
+### #19 CASE 001 の判定条件と最終回答 ✅
 - **成果物**: `solution.json`（checks 7件 + finalAnswer）
 - **完了条件**: [case-001.md §3](./cases/case-001.md#3-objective-一覧) の表どおり。
   obj-05 のみ `columnValues` + `exact: true`
 - ⛔ `#18`
 
-### #20 CASE 001 のヒント
+### #20 CASE 001 のヒント ✅
 - **成果物**: `hints.json`。全7Objectiveに3段階
 - **完了条件**: level 3 でも正解SQLそのものを書いていない。用意漏れなし
 - ⛔ `#18`
 
-### #21 CASE 001 検証テスト
+### #21 CASE 001 検証テスト ✅
 - **成果物**: `tests/cases/case-001.test.ts`
 - **完了条件**: 各Objectiveについて**正解例SQL 2〜3通り**が全て達成判定され、
   **不正解例**が達成判定されない。最終回答の正解が受理され誤答が拒否される。
   ER図定義の整合性チェック（[case-format.md §4.2](./case-format.md#42-er図の検証)）も通る
 - **これがないとPhase 3は完了しない**
 - ⛔ `#19`, `#23`
+- **実績**: 正解例30・不正解例22。わざと `solution.json` を壊して両方向の検出も確認した。
+  加えて `caseStructure.test.ts` で schema.json と実DBの一致、ER図定義の整合性、
+  Objective DAG、ヒントの用意漏れも検証している（計47本）。
 
 ---
 
@@ -186,7 +189,7 @@
 - **完了条件**: 不正なCASE JSONを黙って受理せず、明示的なエラーにする。テストあり
 - ⛔ `#3` 🔀（Phase 2と並行可）
 
-### #23 判定エンジン（normalize + checks）
+### #23 判定エンジン（normalize + checks） ✅（Phase 3 で前倒し実装）
 - **成果物**: `game/normalize.ts`, `game/checks.ts`。
   `containsRows` / `resultSet` / `columnValues` の3タイプ
 - **完了条件**: [case-format.md §5.3](./case-format.md#53-値の正規化ルール実装が必ず従うこと) の

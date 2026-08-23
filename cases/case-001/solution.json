@@ -1,0 +1,106 @@
+{
+  "checks": {
+    "obj-01": [
+      {
+        "type": "containsRows",
+        "columns": ["id", "amount"],
+        "rows": [[4821, 1000000]],
+        "options": { "maxRows": 20 }
+      }
+    ],
+
+    "obj-02": [
+      {
+        "type": "containsRows",
+        "columns": ["name", "amount"],
+        "rows": [["山田 咲", 1000000]],
+        "options": { "maxRows": 20 }
+      }
+    ],
+
+    "obj-03": [
+      {
+        "type": "containsRows",
+        "columns": ["ip_address", "occurred_at", "result"],
+        "rows": [["10.0.4.112", "2026-03-14 02:09:20", "success"]],
+        "options": { "maxRows": 30 }
+      }
+    ],
+
+    "obj-04": [
+      {
+        "type": "containsRows",
+        "columns": ["direction", "occurred_at"],
+        "rows": [["out", "2026-03-13 19:42:18"]],
+        "options": { "maxRows": 60 }
+      }
+    ],
+
+    "obj-05": [
+      {
+        "type": "columnValues",
+        "column": "name",
+        "values": ["田中 誠"],
+        "options": { "exact": true }
+      }
+    ],
+
+    "obj-06": [
+      {
+        "type": "containsRows",
+        "columns": ["name", "ip_address"],
+        "rows": [["田中 誠", "10.0.4.112"]],
+        "options": { "maxRows": 60 }
+      }
+    ],
+
+    "obj-07": [
+      {
+        "type": "containsRows",
+        "columns": ["occurred_at", "result"],
+        "rows": [
+          ["2026-03-14 02:05:11", "failure"],
+          ["2026-03-14 02:06:02", "failure"],
+          ["2026-03-14 02:07:44", "failure"]
+        ],
+        "options": { "maxRows": 30 }
+      }
+    ]
+  },
+
+  "finalAnswer": {
+    "fields": [
+      {
+        "id": "culprit",
+        "label": "100万円を送金したのは誰ですか？",
+        "type": "select",
+        "options": [
+          "佐藤 健一",
+          "鈴木 花子",
+          "渡辺 一郎",
+          "伊藤 美咲",
+          "中村 大輔",
+          "山田 咲",
+          "小林 涼",
+          "加藤 健",
+          "吉田 直樹",
+          "田中 誠"
+        ],
+        "correct": "田中 誠"
+      },
+      {
+        "id": "method",
+        "label": "どのようにして送金しましたか？",
+        "type": "select",
+        "options": [
+          "自分のアカウントで送金した",
+          "他人のアカウントの認証情報を使って送金した",
+          "退職者のアカウントを再利用した",
+          "システムの脆弱性を突いてデータベースを直接書き換えた"
+        ],
+        "correct": "他人のアカウントの認証情報を使って送金した"
+      }
+    ],
+    "requireAll": true
+  }
+}
