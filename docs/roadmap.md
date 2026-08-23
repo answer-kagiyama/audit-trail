@@ -14,7 +14,7 @@
 | [architecture.md](./architecture.md) | ✅ |
 | [case-format.md](./case-format.md) | ✅ |
 | [adr/](./adr/) 0001–0004 | ✅ |
-| [adr/0005](./adr/0005-ui-styling.md)（UI方針） | 🟡 Proposed — 承認待ち |
+| [adr/0005](./adr/0005-ui-styling.md)（UI方針） | ✅ |
 | [cases/case-001.md](./cases/case-001.md)（CASE 001仕様） | ✅ |
 | [AGENTS.md](../AGENTS.md) | ✅ |
 | [mvp-issues.md](./mvp-issues.md)（依存関係順のIssue分解） | ✅ |
@@ -23,7 +23,7 @@
 
 ---
 
-## Phase 1: 技術PoC
+## Phase 1: 技術PoC ✅ 完了
 
 **目的**: SQLite WASM がブラウザで動き、静的 `.sqlite` を読んで `SELECT` できることを実証する。
 
@@ -36,6 +36,13 @@
 
 **完了条件**: ブラウザで固定SQLを実行して結果が画面に出る。暴走クエリが5秒で中断され、
 その後も続けて実行できる。CIでテストが緑。
+
+**結果**: 実 Chromium で検証済み — 起動 → SELECT → 暴走クエリが 5,076ms で中断 →
+その後もクエリ実行を継続。ユニットテスト16本が緑。
+
+**ADR-0001 の再評価**: sql.js の統合に想定外の困難はなかった。
+`sql.js/dist/sql-wasm.wasm?url` を Vite が解決し、Worker も `format: 'es'` のみで動作。
+COOP/COEPヘッダは不要。**sql.js 採用を維持する。**
 
 **この時点でADR-0001を再評価する。** 統合が想定より難航したら
 `@sqlite.org/sqlite-wasm` への切替を検討する（この判断のためにPhase 1を先頭に置いている）。

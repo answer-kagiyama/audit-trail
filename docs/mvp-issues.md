@@ -9,23 +9,23 @@
 
 ## Phase 1: 技術PoC
 
-### #1 プロジェクト初期化（Vite + React + TypeScript）
+### #1 プロジェクト初期化（Vite + React + TypeScript） ✅
 - **成果物**: `frontend/` に Vite + React 19 + TS(strict) の雛形。ESLint / Prettier / Vitest 設定
 - **完了条件**: `npm run dev` / `lint` / `typecheck` / `test` / `build` が全て動く。ダミーテスト1本が緑
 - **スコープ外**: UIの見た目、CI
 
-### #2 CI を用意する
+### #2 CI を用意する ✅
 - **成果物**: GitHub Actions で `lint` / `typecheck` / `test` / `build` を実行
 - **完了条件**: PRでCIが走り、失敗が検知される
 - ⛔ `#1`
 
-### #3 `SqlEngine` インターフェースを定義する
+### #3 `SqlEngine` インターフェースを定義する ✅
 - **成果物**: `engine/types.ts` — `SqlEngine` / `QueryResult` / `QueryError` / `ExecuteOptions`
 - **完了条件**: 型定義のみ。実装なし。sql.js の型が一切露出していない
 - **参照**: [architecture.md §2](./architecture.md#2-レイヤ境界最重要)
 - ⛔ `#1`
 
-### #4 sql.js を Web Worker でロードし SELECT を実行する
+### #4 sql.js を Web Worker でロードし SELECT を実行する ✅
 - **成果物**: `engine/worker.ts`, `engine/sqlJsEngine.ts`, `engine/protocol.ts`。
   `.wasm` を `public/` に配置し `locateFile` で解決
 - **完了条件**: 固定の `.sqlite` を fetch → `loadDatabase` → `SELECT 1` の結果が
@@ -33,20 +33,22 @@
 - **スコープ外**: タイムアウト、ガード、UI
 - ⛔ `#3`
 
-### #5 実行タイムアウトと Worker 再起動
+### #5 実行タイムアウトと Worker 再起動 ✅
 - **成果物**: `execute` の `timeoutMs`。超過で `worker.terminate()` → 新Worker起動 → DB再ロード
 - **完了条件**: 意図的な暴走クエリ（大きなCROSS JOIN）が5秒で中断され、
   **その後も続けてクエリを実行できる**。ユニットテストあり
 - **これは最適化ではなく必須の安全機構**（[architecture.md §5](./architecture.md#5-sql実行フロー)）
 - ⛔ `#4`
 
-### #6 Node環境で sql.js を動かすテスト基盤
+### #6 Node環境で sql.js を動かすテスト基盤 ✅
 - **成果物**: Vitest から sql.js を叩けるヘルパー（CASE検証テストの土台）
 - **完了条件**: Node上で `.sqlite` を読んで `SELECT` した結果をアサートするテストが緑
 - ⛔ `#4`
 
 > **Phase 1 完了時に [ADR-0001](./adr/0001-sql-engine.md) を再評価する。**
-> 統合が想定より難航していれば `@sqlite.org/sqlite-wasm` への切替を検討する。
+> → **再評価済み: sql.js 採用を維持。** 統合に想定外の困難はなかった
+> （`?url` インポートで wasm が解決でき、Worker は `format: 'es'` のみ、
+> COOP/COEPヘッダ不要）。[roadmap.md](./roadmap.md#phase-1-技術poc--完了) 参照。
 
 ---
 

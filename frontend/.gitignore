@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+*.local
+.DS_Store
+
+# 生成物（scripts/make-fixtures.mjs が作る）
+src/test/fixtures/
+public/fixtures/

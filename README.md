@@ -8,7 +8,7 @@ SQLを学ぶこと自体が目的ではなく、SQLをゲーム内の**「調査
 > **Audit Trail**（監査証跡）— システムが残す「誰が・いつ・何をしたか」の記録。
 > プレイヤーが読み解くのは、まさにこの証跡である。
 
-> **現在のフェーズ: Phase 0（仕様・設計）完了。実装は未着手。**
+> **現在のフェーズ: Phase 1（技術PoC）完了。次は Phase 2（UI）。**
 
 ---
 
@@ -23,7 +23,7 @@ SQLを学ぶこと自体が目的ではなく、SQLをゲーム内の**「調査
 | [docs/roadmap.md](./docs/roadmap.md) | Phase 0〜6 と Definition of Done |
 | [docs/mvp-issues.md](./docs/mvp-issues.md) | 実装タスク34件（依存関係順） |
 | [docs/cases/case-001.md](./docs/cases/case-001.md) | CASE 001「消えた100万円」仕様 ⚠️ネタバレ |
-| [docs/adr/](./docs/adr/) | 技術方針の決定記録（0005はProposed = 承認待ち） |
+| [docs/adr/](./docs/adr/) | 技術方針の決定記録 |
 | [AGENTS.md](./AGENTS.md) | AIエージェント／コントリビューター向け規約 |
 
 ---
@@ -41,7 +41,22 @@ SQLを学ぶこと自体が目的ではなく、SQLをゲーム内の**「調査
 
 ---
 
+## 開発
+
+```bash
+cd frontend
+npm ci
+npm run dev          # http://localhost:5173
+npm run lint         # 以下4つが緑になるまで完了としない（AGENTS.md）
+npm run typecheck
+npm run test
+npm run build
+```
+
+`npm run fixtures` が PoC/テスト用の `.sqlite` を生成する（`dev`/`test`/`build` の前に自動実行）。
+生成物は git に入れない。
+
 ## 次にやること
 
-1. [ADR-0005（UI方針）](./docs/adr/0005-ui-styling.md) の承認
-2. [docs/mvp-issues.md](./docs/mvp-issues.md) の **#1 プロジェクト初期化** から着手
+[docs/mvp-issues.md](./docs/mvp-issues.md) の **#7 読み取り専用ガード** から
+Phase 2（UI）に着手する。
