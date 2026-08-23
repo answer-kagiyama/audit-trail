@@ -91,6 +91,26 @@ describe('WorkerSqlEngine', () => {
     await engine.dispose();
   });
 
+  it('ガード違反は Worker に送られず forbidden で失敗する', async () => {
+    const { factory, instances } = trackingFactory();
+    const engine = new WorkerSqlEngine(factory);
+    await engine.init();
+    await engine.loadDatabase(await fixtureBytes());
+
+    await expect(engine.execute('DELETE FROM employees')).rejects.toMatchObject({
+      kind: 'forbidden',
+    });
+    // Worker は生きたまま（terminate も再起動もしていない）。
+    expect(instances).toHaveLength(1);
+    expect(instances[0]?.terminated).toBe(false);
+
+    // DBも無傷。
+    await expect(engine.execute('SELECT COUNT(*) AS c FROM employees')).resolves.toMatchObject({
+      rows: [[4]],
+    });
+    await engine.dispose();
+  });
+
   it('init 前の execute は失敗する', async () => {
     const { factory } = trackingFactory();
     const engine = new WorkerSqlEngine(factory);
