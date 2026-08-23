@@ -1,38 +1,39 @@
 /**
- * Phase 1 の技術PoC画面。
+ * Phase 2 のアプリ本体。
  *
- * 目的は「ブラウザで SQLite WASM が動き、静的 .sqlite を読んで SELECT できる」
- * ことの実証だけ。見た目・レイアウト・デザイントークンは Phase 2（Issue #9）で作る。
+ * ゲーム進行（Objective / 証拠 / 判定）はまだ無い。
+ * ダミーCASEデータに対して自由にSQLを書き、結果とエラーを確認できる状態までを作る。
+ * 進行と判定は Phase 4（Issue #22〜#28）で載せる。
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { WorkerSqlEngine, browserWorkerFactory } from './engine/workerEngine.ts';
-import type { QueryResult, SqlEngine } from './engine/types.ts';
+import type { SqlEngine } from './engine/types.ts';
 import { isSqlExecutionError } from './engine/types.ts';
+import type { SchemaDoc } from './game/caseTypes.ts';
+import { buildSchemaHints, toFriendlyError } from './game/errorMap.ts';
+import type { SchemaHints } from './game/errorMap.ts';
+import { AppShell } from './ui/AppShell/AppShell.tsx';
+import { BootScreen } from './ui/BootScreen/BootScreen.tsx';
+import { DatabasePanel } from './ui/DatabasePanel/DatabasePanel.tsx';
+import { ResultPanel } from './ui/ResultTable/ResultTable.tsx';
+import type { ResultState } from './ui/ResultTable/ResultTable.tsx';
+import { SqlEditor } from './ui/SqlEditor/SqlEditor.tsx';
+import { StoryPlaceholder } from './ui/StoryPanel/StoryPlaceholder.tsx';
 
-const FIXTURE_URL = `${import.meta.env.BASE_URL}fixtures/demo.sqlite`;
+const DB_URL = `${import.meta.env.BASE_URL}fixtures/demo.sqlite`;
+const SCHEMA_URL = `${import.meta.env.BASE_URL}fixtures/demo-schema.json`;
 
-/**
- * 意図せず書いてしまう事故クエリの再現。タイムアウトが働くことを手で確かめる用。
- *
- * 巨大な CROSS JOIN でもよいが、CASE DB は小さいので確実に長時間走る
- * 再帰CTEを使う。PRAGMA query_only では止まらない（読み取りだけなので）点も、
- * タイムアウトが唯一の防御線であることを示している。
- */
-const RUNAWAY_SQL = `WITH RECURSIVE runaway(n) AS (
-  SELECT 1
-  UNION ALL
-  SELECT n + 1 FROM runaway WHERE n < 1000000000
-)
-SELECT COUNT(*) FROM runaway`;
-
-type Status = 'booting' | 'ready' | 'running' | 'failed';
+interface Loaded {
+  schema: SchemaDoc;
+  hints: SchemaHints;
+}
 
 export function App() {
   const engineRef = useRef<SqlEngine | null>(null);
-  const [status, setStatus] = useState<Status>('booting');
-  const [sql, setSql] = useState('SELECT id, name, department FROM employees ORDER BY id');
-  const [result, setResult] = useState<QueryResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const [bootError, setBootError] = useState<string | undefined>(undefined);
+  const [result, setResult] = useState<ResultState>({ kind: 'idle' });
+  const [history, setHistory] = useState<string[]>([]);
 
   useEffect(() => {
     const engine = new WorkerSqlEngine(browserWorkerFactory);
@@ -41,15 +42,21 @@ export function App() {
 
     void (async () => {
       try {
-        await engine.init();
-        const response = await fetch(FIXTURE_URL);
-        if (!response.ok) throw new Error(`fixture fetch failed: ${response.status}`);
-        await engine.loadDatabase(await response.arrayBuffer());
-        if (!cancelled) setStatus('ready');
+        const [schemaResponse, dbResponse] = await Promise.all([
+          fetch(SCHEMA_URL),
+          fetch(DB_URL),
+          engine.init(),
+        ]);
+        if (!schemaResponse.ok) throw new Error(`schema: HTTP ${String(schemaResponse.status)}`);
+        if (!dbResponse.ok) throw new Error(`database: HTTP ${String(dbResponse.status)}`);
+
+        // Phase 4 の Issue #22 でスキーマ検証を入れるまでは信頼して読む。
+        const schema = (await schemaResponse.json()) as SchemaDoc;
+        await engine.loadDatabase(await dbResponse.arrayBuffer());
+
+        if (!cancelled) setLoaded({ schema, hints: buildSchemaHints(schema.tables) });
       } catch (e) {
-        if (cancelled) return;
-        setStatus('failed');
-        setError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) setBootError(e instanceof Error ? e.message : String(e));
       }
     })();
 
@@ -59,56 +66,42 @@ export function App() {
     };
   }, []);
 
-  const run = useCallback(async (query: string) => {
-    const engine = engineRef.current;
-    if (!engine) return;
-    setStatus('running');
-    setError(null);
-    setResult(null);
-    try {
-      setResult(await engine.execute(query));
-    } catch (e) {
-      setError(isSqlExecutionError(e) ? `[${e.kind}] ${e.rawMessage}` : String(e));
-    } finally {
-      setStatus('ready');
-    }
-  }, []);
+  const run = useCallback(
+    async (sql: string) => {
+      const engine = engineRef.current;
+      if (!engine || !loaded) return;
+
+      setResult({ kind: 'running' });
+      try {
+        const queryResult = await engine.execute(sql);
+        setResult({ kind: 'result', result: queryResult });
+        // 成功したクエリだけを履歴に残す。連続した重複は積まない。
+        setHistory((previous) =>
+          previous[previous.length - 1] === sql ? previous : [...previous, sql],
+        );
+      } catch (e) {
+        if (!isSqlExecutionError(e)) throw e;
+        setResult({ kind: 'error', error: toFriendlyError(e, loaded.hints) });
+      }
+    },
+    [loaded],
+  );
+
+  if (bootError !== undefined) return <BootScreen error={bootError} />;
+  if (!loaded) return <BootScreen />;
 
   return (
-    <main style={{ fontFamily: 'monospace', padding: '1.5rem', maxWidth: 900 }}>
-      <h1>Audit Trail — Phase 1 PoC</h1>
-      <p>status: {status}</p>
-
-      <textarea
-        value={sql}
-        onChange={(e) => setSql(e.target.value)}
-        rows={6}
-        spellCheck={false}
-        style={{ width: '100%', fontFamily: 'inherit' }}
-        aria-label="SQL"
-      />
-
-      <p>
-        <button onClick={() => void run(sql)} disabled={status !== 'ready'}>
-          実行
-        </button>{' '}
-        <button onClick={() => void run(RUNAWAY_SQL)} disabled={status !== 'ready'}>
-          暴走クエリでタイムアウトを試す
-        </button>
-      </p>
-
-      {error !== null && <pre style={{ color: 'crimson', whiteSpace: 'pre-wrap' }}>{error}</pre>}
-      {result && (
-        <>
-          <p>
-            {result.rowCount} 行 / {result.elapsedMs.toFixed(1)} ms
-            {result.truncated ? '（表示は先頭のみ）' : ''}
-          </p>
-          <pre style={{ whiteSpace: 'pre-wrap' }}>
-            {JSON.stringify({ columns: result.columns, rows: result.rows }, null, 2)}
-          </pre>
-        </>
-      )}
-    </main>
+    <AppShell
+      story={<StoryPlaceholder />}
+      database={<DatabasePanel schema={loaded.schema} />}
+      editor={
+        <SqlEditor
+          history={history}
+          disabled={result.kind === 'running'}
+          onRun={(sql) => void run(sql)}
+        />
+      }
+      result={<ResultPanel state={result} />}
+    />
   );
 }

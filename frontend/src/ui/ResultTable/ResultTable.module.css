@@ -1,0 +1,114 @@
+.scroll {
+  height: 100%;
+  overflow: auto;
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-size: var(--text-sm);
+}
+
+.table th,
+.table td {
+  padding: var(--space-1) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* 列ヘッダを固定する。横に長い結果を見ながら列名を見失わないため。 */
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.rowNumber {
+  color: var(--text-muted);
+  text-align: right;
+  user-select: none;
+  border-right: 1px solid var(--border-subtle);
+}
+
+.table tbody tr:hover td {
+  background: var(--surface-raised);
+}
+
+.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.null {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.notice {
+  padding: var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.truncated {
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-raised);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  position: sticky;
+  bottom: 0;
+}
+
+/* --- エラー -------------------------------------------------------------- */
+.error {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.errorMessage {
+  color: var(--danger);
+  border-left: 3px solid var(--danger);
+  padding-left: var(--space-3);
+  line-height: var(--leading-normal);
+}
+
+.suggestion {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.suggestion code {
+  color: var(--accent-strong);
+}
+
+.rawToggle {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.rawSummary {
+  cursor: pointer;
+}
+
+.raw {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
