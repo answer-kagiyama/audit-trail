@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc -b && vite build",
+    "cases:build": "node ../tools/build-case-db.mjs ../cases/case-001",
+    "cases:check": "node ../tools/build-case-db.mjs --check ../cases/case-001",
     "dev": "vite",
     "fixtures": "node scripts/make-fixtures.mjs",
     "format": "prettier --write .",

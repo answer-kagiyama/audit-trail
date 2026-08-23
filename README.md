@@ -8,7 +8,7 @@ SQLを学ぶこと自体が目的ではなく、SQLをゲーム内の**「調査
 > **Audit Trail**（監査証跡）— システムが残す「誰が・いつ・何をしたか」の記録。
 > プレイヤーが読み解くのは、まさにこの証跡である。
 
-> **現在のフェーズ: Phase 2（UI）完了。次は Phase 3（CASE 001）。**
+> **現在のフェーズ: Phase 3（CASE 001）完了。次は Phase 4（進行・判定）。**
 
 ---
 
@@ -56,7 +56,14 @@ npm run build
 `npm run fixtures` が PoC/テスト用の `.sqlite` を生成する（`dev`/`test`/`build` の前に自動実行）。
 生成物は git に入れない。
 
+CASEデータを触ったら:
+
+```bash
+npm run cases:build   # seed.sql → database.sqlite を再生成
+npm run cases:check   # コミット済みの .sqlite とのズレを検出（CIでも実行）
+```
+
 ## 次にやること
 
-[docs/mvp-issues.md](./docs/mvp-issues.md) の **#15 CASE DB ビルドツール** から
-Phase 3（CASE 001）に着手する。
+[docs/mvp-issues.md](./docs/mvp-issues.md) の **#22 CASEローダー** から
+Phase 4（進行・判定）に着手する。判定エンジン（#23）は Phase 3 で実装済み。
