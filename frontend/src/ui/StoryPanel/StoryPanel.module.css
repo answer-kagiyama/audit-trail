@@ -1,0 +1,259 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sectionTitle {
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* --- プロローグ ----------------------------------------------------------- */
+.prologue > summary {
+  cursor: pointer;
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  list-style: none;
+}
+
+.prologue > summary::-webkit-details-marker {
+  display: none;
+}
+
+.prologue > summary::before {
+  content: '▸ ';
+}
+
+.prologue[open] > summary::before {
+  content: '▾ ';
+}
+
+.prose {
+  margin-top: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  white-space: pre-wrap;
+}
+
+.prose strong {
+  color: var(--text-primary);
+}
+
+/* --- 調査目的 ------------------------------------------------------------- */
+.objective {
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.objectiveTitle {
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.objectiveBrief {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.hintList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hint {
+  border-left: 2px solid var(--border-strong);
+  padding-left: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+}
+
+.hintLevel {
+  color: var(--text-muted);
+  margin-right: var(--space-1);
+}
+
+.hintButton {
+  align-self: flex-start;
+  appearance: none;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+}
+
+.hintButton:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.hintsDone {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* --- 証拠 ----------------------------------------------------------------- */
+.evidenceList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evidence {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-base);
+  padding: var(--space-2) var(--space-3);
+}
+
+/* 新しく獲得した証拠に注意を引く。 */
+.evidenceNew {
+  animation: reveal 1.4s ease-out;
+  border-color: var(--accent);
+}
+
+@keyframes reveal {
+  0% {
+    background: var(--accent-dim);
+  }
+  100% {
+    background: var(--surface-base);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evidenceNew {
+    animation: none;
+  }
+}
+
+.evidenceTitle {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.evidenceBody {
+  margin-top: var(--space-1);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  white-space: pre-wrap;
+}
+
+.empty {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* --- ストーリー断片 -------------------------------------------------------- */
+.beat {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  font-style: italic;
+  border-left: 2px solid var(--accent-dim);
+  padding-left: var(--space-3);
+  white-space: pre-wrap;
+}
+
+/* --- 進捗 / 操作 ---------------------------------------------------------- */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-raised);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: var(--accent);
+  transition: width var(--transition-fast);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.solve {
+  appearance: none;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+}
+
+.solve:hover {
+  background: var(--accent-strong);
+}
+
+.reset {
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+}
+
+.reset:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.notice {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+}
