@@ -5,6 +5,7 @@
  *
  * @see docs/architecture.md#5-sql実行フロー
  */
+import { guardQuery } from './guard.ts';
 import type { WorkerFactory, WorkerLike, WorkerRequest, WorkerResponse } from './protocol.ts';
 import type { ExecuteOptions, QueryResult, SqlEngine } from './types.ts';
 import { DEFAULT_MAX_ROWS, DEFAULT_TIMEOUT_MS, SqlExecutionError } from './types.ts';
@@ -47,6 +48,12 @@ export class WorkerSqlEngine implements SqlEngine {
   }
 
   async execute(sql: string, opts: ExecuteOptions = {}): Promise<QueryResult> {
+    // ガードは main thread で同期的に済ませ、違反したクエリは Worker に送らない。
+    // forbidden の rawMessage だけはエンジン生メッセージではなく、
+    // そのままユーザーに見せる日本語（errorMap は素通しする）。
+    const verdict = guardQuery(sql);
+    if (!verdict.ok) throw new SqlExecutionError('forbidden', verdict.message);
+
     const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const maxRows = opts.maxRows ?? DEFAULT_MAX_ROWS;
     const id = this.takeId();

@@ -52,22 +52,22 @@
 
 ---
 
-## Phase 2: UI
+## Phase 2: UI ✅ 完了
 
-### #7 読み取り専用ガード（許可リスト方式）
+### #7 読み取り専用ガード（許可リスト方式） ✅
 - **成果物**: `engine/guard.ts` + Worker側の `PRAGMA query_only = ON`
 - **完了条件**: 先頭が `SELECT`/`WITH` 以外を拒否、複文を拒否。
   拒否メッセージは世界観に沿った日本語。ユニットテストあり
 - ⛔ `#4`
 
-### #8 SQLエラーの日本語化
+### #8 SQLエラーの日本語化 ✅
 - **成果物**: `game/errorMap.ts` — SQLiteエラー → `QueryError.kind` + 日本語メッセージ。
   テーブル名/カラム名のtypoに「もしかして」を出す（レーベンシュタイン距離）
 - **完了条件**: [game-design.md §5](./game-design.md#5-エラーとフィードバックのux) の
   4パターンすべてにテストがある
 - ⛔ `#3` 🔀
 
-### #9 UI基盤（デザイントークン + レイアウト + Base UI）
+### #9 UI基盤（デザイントークン + レイアウト + Base UI） ✅
 - **成果物**:
   - `styles/tokens.css` — 色・間隔・フォント・角丸のCSSカスタムプロパティ
   - `ui/App.tsx` と4領域のプレースホルダ。デスクトップ2カラム / モバイルタブ切替
@@ -78,7 +78,7 @@
   （[ADR-0005](./adr/0005-ui-styling.md)）
 - ⛔ `#1` 🔀
 
-### #10 SQL Editor コンポーネント
+### #10 SQL Editor コンポーネント ✅
 - **成果物**: `ui/SqlEditor/`。CodeMirror 6 + `@codemirror/lang-sql`。
   実行ボタン + `Cmd/Ctrl+Enter`。**クエリ履歴**（↑キー or リスト）
 - **完了条件**: SQLを書いて実行イベントを発火できる。履歴を遡れる
@@ -86,20 +86,20 @@
   （[ADR-0003](./adr/0003-editor.md)）。これでPhase 2をブロックしない
 - ⛔ `#9`
 
-### #11 Result（結果表）コンポーネント
+### #11 Result（結果表）コンポーネント ✅
 - **成果物**: `ui/ResultTable/`。列ヘッダ固定、横スクロール、
   **NULLをグレーの `NULL` 表示**、行数・実行時間、500行で打ち切り表示、エラー表示
 - **完了条件**: 正常結果・空結果・エラー・500行超過の4状態が正しく描画される
 - ⛔ `#9`, `#8`
 
-### #12 Database パネル（テーブル詳細ビュー）
+### #12 Database パネル（テーブル詳細ビュー） ✅
 - **成果物**: `ui/DatabasePanel/TableDetail/`。`schema.json` を描画。
   テーブル説明・列/型/説明/NULL可否/PK・FKの別・**サンプル行3件**
 - **完了条件**: [case-format.md §4](./case-format.md#4-schemajson) の全項目が表示される
 - **MVPで最も手を抜いてはいけない画面**（ここが貧弱だとプレイヤーは詰む）
 - ⛔ `#9`
 
-### #13 ER図ビューア
+### #13 ER図ビューア ✅
 - **成果物**: `ui/DatabasePanel/ErDiagram/`。`schema.json` の
   `erLayout` / `relations` / `erCanvas` から**インラインSVG**を描画
 - **完了条件**:
@@ -117,7 +117,7 @@
   （[game-design.md §4](./game-design.md#database-画面)）
 - ⛔ `#12`
 
-### #14 UI と engine を繋ぐ（自由SQL実行が通しで動く）
+### #14 UI と engine を繋ぐ（自由SQL実行が通しで動く） ✅
 - **成果物**: エディタ実行 → ガード → Worker → 結果表、の一気通貫
 - **完了条件**: ダミー `.sqlite` に対して自由にSQLを書き、結果とエラーが画面に出る。
   暴走クエリがタイムアウトして復帰できる。ER図とテーブル詳細が表示されている

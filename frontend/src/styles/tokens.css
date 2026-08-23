@@ -1,0 +1,81 @@
+/**
+ * デザイントークン。
+ *
+ * CSS Modules 側はここを参照するだけにし、色・間隔・フォントを直書きしない
+ * （AGENTS.md §3）。
+ *
+ * 単一テーマ（ダーク）に意図的に固定する。Audit Trail は監査ログを読む
+ * 捜査という世界観を持ち、ターミナル寄りの質感がそのままゲームの雰囲気になる。
+ * ライトテーマを併走させると、その雰囲気を二重に作り込むコストに見合わない。
+ * OSのテーマ設定には追従しない（prefers-color-scheme を見ない）。
+ */
+:root {
+  color-scheme: dark;
+
+  /* --- 面 ------------------------------------------------------------- */
+  --surface-base: #0f1216; /* 画面の地 */
+  --surface-panel: #161b22; /* パネル */
+  --surface-raised: #1c232c; /* パネル内の一段上（ヘッダ、行ホバー） */
+  --surface-sunken: #0b0e12; /* エディタ、コードブロック */
+
+  /* --- 線 ------------------------------------------------------------- */
+  --border-subtle: #232b36;
+  --border-strong: #364150;
+
+  /* --- 文字 ----------------------------------------------------------- */
+  --text-primary: #d7dee8;
+  --text-secondary: #93a1b3;
+  --text-muted: #66748a; /* NULL、補助情報 */
+  --text-inverse: #0f1216;
+
+  /* --- アクセント ------------------------------------------------------
+     琥珀色。監査ログ端末の蛍光管を想起させ、青系UIに埋もれない。 */
+  --accent: #d9a441;
+  --accent-strong: #f0bb5c;
+  --accent-dim: #6b5220;
+  --accent-contrast: #0f1216; /* accent 上に載せる文字 */
+
+  /* --- 状態 ----------------------------------------------------------- */
+  --danger: #e5715f;
+  --danger-dim: #4a2620;
+  --success: #6bbf8a;
+  --info: #6fa8d1;
+
+  /* --- タイポグラフィ --------------------------------------------------
+     本文も等幅にする。数値・ID・時刻を突き合わせる作業が主役なので、
+     桁が揃うことが読みやすさに直結する。 */
+  --font-mono:
+    ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas,
+    'Noto Sans Mono CJK JP', monospace;
+  --font-ui: system-ui, -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+
+  --leading-tight: 1.35;
+  --leading-normal: 1.7;
+
+  /* --- 間隔 ----------------------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  /* --- 形 ------------------------------------------------------------- */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+
+  /* --- レイアウト ------------------------------------------------------ */
+  --story-column: 22rem; /* デスクトップ左カラム幅 */
+  --breakpoint-wide: 900px; /* これ未満はタブ表示 */
+
+  /* --- その他 ---------------------------------------------------------- */
+  --focus-ring: 2px solid var(--accent-strong);
+  --focus-offset: 2px;
+  --transition-fast: 120ms ease;
+}

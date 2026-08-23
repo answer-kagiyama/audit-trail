@@ -1,0 +1,107 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  flex: none;
+}
+
+.title {
+  font-size: var(--text-lg);
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* --- デスクトップ: 2カラム ---------------------------------------------- */
+.wide {
+  display: grid;
+  grid-template-columns: var(--story-column) minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-3);
+  flex: 1;
+  min-height: 0;
+}
+
+/* 右カラム: Database / Editor / Result を縦に積む。
+   Database と Result が伸縮し、Editor は内容なりの高さを保つ。 */
+.workbench {
+  display: grid;
+  grid-template-rows: minmax(0, 1.6fr) auto minmax(0, 1fr);
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+/* --- モバイル: タブ ------------------------------------------------------ */
+.narrow {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.tabList {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  flex: none;
+}
+
+.tab {
+  appearance: none;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tab[data-selected] {
+  background: var(--surface-base);
+  border-color: var(--border-subtle);
+  color: var(--accent);
+}
+
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-3);
+}
+
+/* SQLタブはエディタと結果を縦に積む。 */
+.sqlPanel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-3);
+}

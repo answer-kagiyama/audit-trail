@@ -8,7 +8,7 @@ SQLを学ぶこと自体が目的ではなく、SQLをゲーム内の**「調査
 > **Audit Trail**（監査証跡）— システムが残す「誰が・いつ・何をしたか」の記録。
 > プレイヤーが読み解くのは、まさにこの証跡である。
 
-> **現在のフェーズ: Phase 1（技術PoC）完了。次は Phase 2（UI）。**
+> **現在のフェーズ: Phase 2（UI）完了。次は Phase 3（CASE 001）。**
 
 ---
 
@@ -58,5 +58,5 @@ npm run build
 
 ## 次にやること
 
-[docs/mvp-issues.md](./docs/mvp-issues.md) の **#7 読み取り専用ガード** から
-Phase 2（UI）に着手する。
+[docs/mvp-issues.md](./docs/mvp-issues.md) の **#15 CASE DB ビルドツール** から
+Phase 3（CASE 001）に着手する。

@@ -1,0 +1,162 @@
+.wrap {
+  position: relative;
+  height: 100%;
+  min-height: 20rem;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none; /* ピンチ/パンを自前で処理する */
+  cursor: grab;
+}
+
+.svg:active {
+  cursor: grabbing;
+}
+
+.toolbar {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: flex;
+  gap: var(--space-1);
+}
+
+.toolButton {
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+}
+
+.toolButton:hover {
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+/* --- 箱 ----------------------------------------------------------------- */
+.box {
+  cursor: pointer;
+}
+
+.boxFrame {
+  fill: var(--surface-panel);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  rx: 4;
+}
+
+.box:hover .boxFrame,
+.box:focus-visible .boxFrame {
+  stroke: var(--accent);
+}
+
+.boxSelected .boxFrame {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.boxHeader {
+  fill: var(--surface-raised);
+}
+
+.boxTitle {
+  fill: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  dominant-baseline: middle;
+}
+
+.rowText {
+  fill: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  dominant-baseline: middle;
+}
+
+.rowKey {
+  fill: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  dominant-baseline: middle;
+}
+
+.rowHighlighted {
+  fill: var(--accent-strong);
+  font-weight: 600;
+}
+
+.rowHighlightBg {
+  fill: var(--accent-dim);
+}
+
+.divider {
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+}
+
+/* --- 線 ----------------------------------------------------------------- */
+.relation {
+  cursor: help;
+}
+
+.line {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+
+.foot {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+
+/* 当たり判定を広げる透明な線。細い線はホバーしづらい。 */
+.hitArea {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+}
+
+.relationActive .line,
+.relationActive .foot {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.label {
+  fill: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.labelBg {
+  fill: var(--surface-sunken);
+  pointer-events: none;
+}
+
+.relationActive .label {
+  fill: var(--accent-strong);
+}
+
+.hint {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-subtle);
+}

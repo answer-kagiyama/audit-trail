@@ -1,0 +1,128 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.editor:focus-within {
+  border-color: var(--border-strong);
+}
+
+.surface {
+  min-height: 7rem;
+  max-height: 18rem;
+  overflow: auto;
+  background: var(--surface-sunken);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-raised);
+  border-top: 1px solid var(--border-subtle);
+  flex: none;
+  flex-wrap: wrap;
+}
+
+.run {
+  appearance: none;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  padding: var(--space-1) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.run:hover:not(:disabled) {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+.run:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.spacer {
+  margin-left: auto;
+}
+
+.history {
+  font-size: var(--text-xs);
+}
+
+.historySummary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  list-style: none;
+}
+
+.historySummary::-webkit-details-marker {
+  display: none;
+}
+
+.historySummary::before {
+  content: '▸ ';
+}
+
+.history[open] .historySummary::before {
+  content: '▾ ';
+}
+
+.historyList {
+  position: absolute;
+  right: var(--space-3);
+  z-index: 10;
+  margin-top: var(--space-2);
+  max-height: 14rem;
+  width: min(32rem, 80vw);
+  overflow: auto;
+  padding: var(--space-1);
+  list-style: none;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.historyItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.historyItem:hover {
+  background: var(--surface-panel);
+  color: var(--text-primary);
+}
+
+.empty {
+  padding: var(--space-2);
+  color: var(--text-muted);
+}
