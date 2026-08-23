@@ -65,6 +65,20 @@ npm run cases:build   # seed.sql → database.sqlite を再生成
 npm run cases:check   # コミット済みの .sqlite とのズレを検出（CIでも実行）
 ```
 
+## デプロイ（Vercel）
+
+リポジトリ直下の [`vercel.json`](./vercel.json) がビルド方法を指定している。
+
+**Vercel 側の設定で Root Directory は変更しないこと（リポジトリ直下のまま）。**
+`frontend` に設定すると、既定では `frontend/` の外が含まれず、
+`cases/` が見つからずビルドが落ちる。
+
+| 設定 | 値 |
+|---|---|
+| Root Directory | （空＝リポジトリ直下） |
+| Framework Preset | Other |
+| Install / Build / Output | `vercel.json` の指定が使われる |
+
 ## 次にやること
 
 [docs/mvp-issues.md](./docs/mvp-issues.md) の **#29 ローディングとエラー画面** から
