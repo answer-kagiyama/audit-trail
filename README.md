@@ -1,14 +1,19 @@
-# Audit Trail — SQL推理ゲーム
+# WHERE — SQL推理ゲーム
+
+> **真実はどこにある？**
 
 ブラウザ上でユーザーが実際にSQLを書き、架空の事件のデータベースを調査して
 謎を解いてストーリーを進める推理ゲーム。
 
 SQLを学ぶこと自体が目的ではなく、SQLをゲーム内の**「調査手段」**として扱う。
 
-> **Audit Trail**（監査証跡）— システムが残す「誰が・いつ・何をしたか」の記録。
-> プレイヤーが読み解くのは、まさにこの証跡である。
+> `WHERE` は「どの行を選ぶか」を書く句であり、同時に「どこに」を問う言葉でもある。
+> 絞り込むことで在り処を突き止める——それがこのゲームでやることそのものになっている。
 
-> **現在のフェーズ: Phase 5（品質）完了。Vercel にデプロイ済み。残るは Phase 6（実プレイテスト）。**
+リポジトリ名・パッケージ名・localStorage キーは `audit-trail`（監査証跡）のまま。
+表示名と識別子を分けている理由は [docs/vision.md §0](./docs/vision.md) を参照。
+
+> **現在のフェーズ: Phase 5（品質）完了。Vercel にデプロイ済み。Phase 6（実プレイテスト）進行中。**
 
 ---
 
@@ -21,7 +26,7 @@ SQLを学ぶこと自体が目的ではなく、SQLをゲーム内の**「調査
 | [docs/architecture.md](./docs/architecture.md) | 技術構成、レイヤ境界、テスト戦略 |
 | [docs/case-format.md](./docs/case-format.md) | CASEデータ仕様（JSON構造・判定ルール） |
 | [docs/roadmap.md](./docs/roadmap.md) | Phase 0〜6 と Definition of Done |
-| [docs/mvp-issues.md](./docs/mvp-issues.md) | 実装タスク34件（依存関係順） |
+| [docs/mvp-issues.md](./docs/mvp-issues.md) | 実装タスク36件（依存関係順） |
 | [docs/cases/case-001.md](./docs/cases/case-001.md) | CASE 001「消えた100万円」仕様 ⚠️ネタバレ |
 | [docs/adr/](./docs/adr/) | 技術方針の決定記録 |
 | [AGENTS.md](./AGENTS.md) | AIエージェント／コントリビューター向け規約 |
@@ -79,6 +84,11 @@ npm run cases:check   # コミット済みの .sqlite とのズレを検出（CI
 | Root Directory | （空＝リポジトリ直下） |
 | Framework Preset | Other |
 | Install / Build / Output | `vercel.json` の指定が使われる |
+
+`vercel.json` の `rewrites` は、`/case-001` のような URL を直接開いたときに
+`index.html` を返すための指定（SPA フォールバック）。
+これが無いと、CASE の URL を共有された人が 404 を見る。
+`cases/` と `assets/` は実ファイルなので除外している。
 
 ## 次にやること
 

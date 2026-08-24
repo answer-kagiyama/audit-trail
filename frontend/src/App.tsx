@@ -1,245 +1,130 @@
 /**
- * アプリ本体。CASE を読み込み、進行・判定・UI を繋ぐ。
+ * アプリ本体。経路を見て、事件簿かゲーム画面のどちらかを出す。
  *
  * ゲームのルールはすべて game/ の純関数にある。ここがやるのは
  * 「エンジンを回して、返ってきた状態を描き、保存する」ことだけ。
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { WorkerSqlEngine, browserWorkerFactory } from './engine/workerEngine.ts';
-import type { SqlEngine } from './engine/types.ts';
-import { isSqlExecutionError } from './engine/types.ts';
-import { CaseDataError, loadCaseData } from './game/caseLoader.ts';
-import type { CaseData } from './game/caseTypes.ts';
-import { findEvidence, findStoryBeat } from './game/caseTypes.ts';
-import { buildSchemaHints, toFriendlyError } from './game/errorMap.ts';
-import type { SchemaHints } from './game/errorMap.ts';
-import {
-  activeObjectives,
-  allObjectivesCompleted,
-  applyQueryResult,
-  initialProgress,
-  revealHint,
-  submitFinalAnswer,
-} from './game/progression.ts';
-import type { ProgressState } from './game/progression.ts';
-import { clearProgress, loadProgress, saveProgress } from './game/save.ts';
-import { AppShell } from './ui/AppShell/AppShell.tsx';
+import { useCallback, useEffect, useState } from 'react';
+import { CaseDataError } from './game/caseLoader.ts';
+import { loadCaseIndex } from './game/caseIndex.ts';
+import type { CaseSummary } from './game/caseIndex.ts';
 import { BootScreen } from './ui/BootScreen/BootScreen.tsx';
-import { DatabasePanel } from './ui/DatabasePanel/DatabasePanel.tsx';
-import { FinalAnswerDialog } from './ui/FinalAnswer/FinalAnswer.tsx';
-import { ObjectiveCleared } from './ui/ObjectiveCleared/ObjectiveCleared.tsx';
-import type { ClearedAnnouncement } from './ui/ObjectiveCleared/ObjectiveCleared.tsx';
-import { ResultPanel } from './ui/ResultTable/ResultTable.tsx';
-import type { ResultState } from './ui/ResultTable/ResultTable.tsx';
-import { SqlEditor } from './ui/SqlEditor/SqlEditor.tsx';
-import { StoryPanel } from './ui/StoryPanel/StoryPanel.tsx';
+import { CaseIndexScreen } from './ui/CaseIndex/CaseIndexScreen.tsx';
+import { CaseSession } from './ui/CaseSession.tsx';
+import { HowToPlay } from './ui/HowToPlay/HowToPlay.tsx';
+import { useRoute } from './ui/hooks/useRoute.ts';
 import { useTheme } from './ui/ThemeToggle/useTheme.ts';
 
-/** MVP は1CASEのみ。CASE選択画面は非範囲（docs/vision.md §5）。 */
-const CASE_ID = 'case-001';
+/** 遊び方を一度でも閉じたか。初回だけ自動で開く。 */
+const SEEN_KEY = 'audit-trail:how-to-play-seen';
 
-const DISCARD_NOTICE: Record<string, string> = {
-  'case-updated':
-    '事件データが更新されたため、進捗をリセットしました。お手数ですが最初から調査してください。',
-  corrupt: '保存された進捗が読めなかったため、リセットしました。',
-  'format-changed': 'セーブ形式が変わったため、進捗をリセットしました。',
-};
-
-interface Loaded {
-  caseData: CaseData;
-  hints: SchemaHints;
+function hasSeenHowToPlay(): boolean {
+  try {
+    return localStorage.getItem(SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
 }
 
-/**
- * 起動失敗の切り分け。
- *
- * 「読み込めませんでした」だけでは、ネットワークの問題なのか、
- * CASEデータが壊れているのか、ブラウザが対応していないのかが分からない。
- * 直せる人が直せる形で出す（docs/mvp-issues.md #29）。
- */
-function describeBootFailure(error: unknown): string {
-  if (error instanceof CaseDataError) {
-    return `事件データが不正です。\n\n場所: ${error.path}\n${error.message}`;
+function markHowToPlaySeen(): void {
+  try {
+    localStorage.setItem(SEEN_KEY, '1');
+  } catch {
+    // 保存できなくても、そのセッション中は再表示しない。
   }
-  const message = error instanceof Error ? error.message : String(error);
-  if (/WebAssembly|wasm/i.test(message)) {
-    return `SQL実行エンジンを起動できませんでした。\nこのブラウザが WebAssembly に対応していない可能性があります。\n\n${message}`;
-  }
-  if (/HTTP|fetch|NetworkError|Failed to fetch/i.test(message)) {
-    return `事件データを取得できませんでした。\n通信状況を確認して再読み込みしてください。\n\n${message}`;
-  }
-  return message;
 }
 
 export function App() {
-  const engineRef = useRef<SqlEngine | null>(null);
-  const [loaded, setLoaded] = useState<Loaded | null>(null);
-  const [bootError, setBootError] = useState<string | undefined>(undefined);
-  const [progress, setProgress] = useState<ProgressState | null>(null);
-  const [notice, setNotice] = useState<string | undefined>(undefined);
-  const [result, setResult] = useState<ResultState>({ kind: 'idle' });
-  const [history, setHistory] = useState<string[]>([]);
-  const [justEarned, setJustEarned] = useState<readonly string[]>([]);
-  const [finalOpen, setFinalOpen] = useState(false);
-  const [cleared, setCleared] = useState<ClearedAnnouncement | null>(null);
+  const { route, navigate } = useRoute();
   const { preference: theme, setPreference: setTheme } = useTheme();
 
-  useEffect(() => {
-    const engine = new WorkerSqlEngine(browserWorkerFactory);
-    engineRef.current = engine;
-    let cancelled = false;
+  const [cases, setCases] = useState<CaseSummary[] | null>(null);
+  const [indexError, setIndexError] = useState<string | undefined>(undefined);
+  // 初回訪問なら開けた状態で始める。ダイアログ自体は索引が読めるまで
+  // 描かれない（下で BootScreen に抜ける）ので、真っ白な画面には重ならない。
+  const [howToPlayOpen, setHowToPlayOpen] = useState(() => !hasSeenHowToPlay());
 
+  useEffect(() => {
+    let cancelled = false;
     void (async () => {
       try {
-        const [caseData] = await Promise.all([
-          loadCaseData({ baseUrl: import.meta.env.BASE_URL, caseId: CASE_ID }),
-          engine.init(),
-        ]);
-        await engine.loadDatabase(caseData.database);
-        if (cancelled) return;
-
-        const restored = loadProgress(CASE_ID, caseData.metadata.version);
-        if (restored.kind === 'discarded') setNotice(DISCARD_NOTICE[restored.reason]);
-        setProgress(restored.kind === 'loaded' ? restored.progress : initialProgress(Date.now()));
-        setLoaded({ caseData, hints: buildSchemaHints(caseData.schema.tables) });
+        const loaded = await loadCaseIndex(import.meta.env.BASE_URL);
+        if (!cancelled) setCases(loaded);
       } catch (e) {
-        if (!cancelled) setBootError(describeBootFailure(e));
+        if (!cancelled) {
+          setIndexError(
+            e instanceof CaseDataError
+              ? e.message
+              : `事件簿を読み込めませんでした。\n\n${e instanceof Error ? e.message : String(e)}`,
+          );
+        }
       }
     })();
-
     return () => {
       cancelled = true;
-      void engine.dispose();
     };
   }, []);
 
-  /** 進捗が変わるたびに保存する。書き込みに失敗してもゲームは止めない。 */
-  const commit = useCallback(
-    (next: ProgressState) => {
-      setProgress(next);
-      if (loaded) saveProgress(CASE_ID, loaded.caseData.metadata.version, next);
-    },
-    [loaded],
-  );
+  const closeHowToPlay = useCallback((open: boolean) => {
+    setHowToPlayOpen(open);
+    if (!open) markHowToPlaySeen();
+  }, []);
 
-  const run = useCallback(
-    async (sql: string) => {
-      const engine = engineRef.current;
-      if (!engine || !loaded || !progress) return;
+  const howToPlay = <HowToPlay open={howToPlayOpen} onOpenChange={closeHowToPlay} />;
 
-      setResult({ kind: 'running' });
-      setJustEarned([]);
-      try {
-        const queryResult = await engine.execute(sql);
-        setResult({ kind: 'result', result: queryResult });
-        setHistory((previous) =>
-          previous[previous.length - 1] === sql ? previous : [...previous, sql],
-        );
+  if (indexError !== undefined) return <BootScreen error={indexError} />;
+  if (!cases) return <BootScreen />;
 
-        // 成功したクエリだけが進行に影響する。
-        const outcome = applyQueryResult(loaded.caseData, progress, queryResult);
-        commit(outcome.state);
-        setJustEarned(outcome.newEvidence);
+  if (route.kind === 'case') {
+    const summary = cases.find((item) => item.id === route.caseId);
+    // 知らない CASE ID を直で開かれたら事件簿に戻す。
+    if (!summary) {
+      return (
+        <>
+          <CaseIndexScreen
+            cases={cases}
+            theme={theme}
+            onThemeChange={setTheme}
+            onOpenCase={(caseId) => {
+              navigate({ kind: 'case', caseId });
+            }}
+            onOpenHowToPlay={() => setHowToPlayOpen(true)}
+          />
+          {howToPlay}
+        </>
+      );
+    }
 
-        const first = outcome.completedObjectives[0];
-        if (first) {
-          const story = loaded.caseData.story;
-          const next = activeObjectives(loaded.caseData, outcome.state)[0];
-          setCleared({
-            // 同じ状態で二重に出さないよう、達成した Objective の並びを鍵にする。
-            id: outcome.completedObjectives.map((o) => o.id).join('+'),
-            objectiveTitle:
-              outcome.completedObjectives.length === 1
-                ? first.title
-                : `${first.title} ほか${String(outcome.completedObjectives.length - 1)}件`,
-            evidenceTitles: outcome.newEvidence.flatMap((id) => {
-              const item = findEvidence(story, id);
-              return item ? [item.title] : [];
-            }),
-            beats: outcome.newStoryBeats.flatMap((id) => {
-              const item = findStoryBeat(story, id);
-              return item ? [item.body] : [];
-            }),
-            nextObjectiveTitle: next?.title,
-            allCleared: allObjectivesCompleted(loaded.caseData, outcome.state),
-          });
-        }
-      } catch (e) {
-        if (!isSqlExecutionError(e)) throw e;
-        setResult({ kind: 'error', error: toFriendlyError(e, loaded.hints) });
-      }
-    },
-    [loaded, progress, commit],
-  );
-
-  const onReset = useCallback(() => {
-    if (!loaded) return;
-    if (!window.confirm('進捗をすべて消して最初からやり直しますか？')) return;
-    clearProgress(CASE_ID);
-    setProgress(initialProgress(Date.now()));
-    setHistory([]);
-    setJustEarned([]);
-    setNotice(undefined);
-    setResult({ kind: 'idle' });
-    setCleared(null);
-  }, [loaded]);
-
-  const onSubmitFinalAnswer = useCallback(
-    (answers: Record<string, string>): boolean => {
-      if (!loaded || !progress) return false;
-      const outcome = submitFinalAnswer(loaded.caseData, progress, answers, Date.now());
-      commit(outcome.state);
-      return outcome.correct;
-    },
-    [loaded, progress, commit],
-  );
-
-  if (bootError !== undefined) return <BootScreen error={bootError} />;
-  if (!loaded || !progress) return <BootScreen />;
+    return (
+      <>
+        <CaseSession
+          // CASE を切り替えたら状態を作り直す。
+          key={summary.id}
+          caseId={summary.id}
+          theme={theme}
+          onThemeChange={setTheme}
+          onBackToIndex={() => {
+            navigate({ kind: 'index' });
+          }}
+          onOpenHowToPlay={() => setHowToPlayOpen(true)}
+        />
+        {howToPlay}
+      </>
+    );
+  }
 
   return (
     <>
-      <AppShell
-        story={
-          <StoryPanel
-            caseData={loaded.caseData}
-            progress={progress}
-            justEarnedEvidence={justEarned}
-            notice={notice}
-            onRevealHint={(objectiveId) => {
-              commit(revealHint(loaded.caseData, progress, objectiveId));
-            }}
-            onOpenFinalAnswer={() => setFinalOpen(true)}
-            onReset={onReset}
-          />
-        }
-        database={<DatabasePanel schema={loaded.caseData.schema} />}
-        editor={
-          <SqlEditor
-            history={history}
-            disabled={result.kind === 'running'}
-            onRun={(sql) => void run(sql)}
-          />
-        }
-        result={<ResultPanel state={result} />}
+      <CaseIndexScreen
+        cases={cases}
         theme={theme}
         onThemeChange={setTheme}
-      />
-
-      <ObjectiveCleared
-        announcement={cleared}
-        onDismiss={() => {
-          setCleared(null);
+        onOpenCase={(caseId) => {
+          navigate({ kind: 'case', caseId });
         }}
+        onOpenHowToPlay={() => setHowToPlayOpen(true)}
       />
-
-      <FinalAnswerDialog
-        caseData={loaded.caseData}
-        progress={progress}
-        open={finalOpen}
-        onOpenChange={setFinalOpen}
-        onSubmit={onSubmitFinalAnswer}
-      />
+      {howToPlay}
     </>
   );
 }

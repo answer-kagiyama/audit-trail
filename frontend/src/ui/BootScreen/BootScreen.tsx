@@ -34,7 +34,7 @@ export function BootScreen({ error }: { error?: string | undefined }) {
   return (
     <div className={styles.screen}>
       <div className={styles.inner}>
-        <h1 className={styles.title}>Audit Trail</h1>
+        <h1 className={styles.title}>WHERE</h1>
         {/* 初回は sql.js の wasm（約660KB）を落とすので、数秒かかることがある。 */}
         <p className={styles.message} role="status">
           捜査資料を読み込んでいます…

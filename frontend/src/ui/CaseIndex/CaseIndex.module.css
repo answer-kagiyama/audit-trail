@@ -1,0 +1,195 @@
+.screen {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 事件が1件しかないうちは上に寄せると下が間延びするので、塊ごと縦中央に置く。
+     safe を付けているのは、事件が増えて画面より高くなったとき上が切れないため。 */
+  justify-content: safe center;
+  padding: var(--space-6) var(--space-4);
+  gap: var(--space-6);
+}
+
+.masthead {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-5);
+}
+
+.title {
+  font-size: clamp(2.5rem, 12vw, 4.5rem);
+  letter-spacing: 0.22em;
+  /* 字間を空けた分だけ右に寄るので、視覚的な中央に戻す。 */
+  text-indent: 0.22em;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.tagline {
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+}
+
+.lede {
+  max-width: 34rem;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ghost {
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+}
+
+.ghost:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* --- 事件簿 ---------------------------------------------------------------- */
+.list {
+  width: min(46rem, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.listTitle {
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  appearance: none;
+  cursor: pointer;
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  color: inherit;
+  font-family: inherit;
+  transition:
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.cardHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.caseId {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+.caseTitle {
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.caseSubtitle {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
+}
+
+.meta {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.concepts {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  margin-top: var(--space-3);
+}
+
+.concept {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.badge {
+  margin-left: auto;
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.badgeUntouched {
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+}
+
+.badgeProgress {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.badgeSolved {
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+
+.empty {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-align: center;
+  padding: var(--space-5);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.footer {
+  padding-top: var(--space-5);
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}

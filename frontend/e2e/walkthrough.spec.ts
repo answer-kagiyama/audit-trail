@@ -21,8 +21,21 @@ const WALKTHROUGH: [string, string][] = [
   ['obj-07', `SELECT * FROM login_logs WHERE employee_id = 7 AND result = 'failure'`],
 ];
 
+/**
+ * 遊び方は初回訪問で自動的に開く。各テストは新しいコンテキスト＝初回訪問なので、
+ * 必ず出る前提で閉じる（出たり出なかったりを許すと、閉じ忘れに気づけない）。
+ */
+async function dismissHowToPlay(page: Page) {
+  const start = page.getByRole('button', { name: '調査をはじめる' });
+  await expect(start).toBeVisible({ timeout: 60_000 });
+  await start.click();
+  await expect(start).toBeHidden();
+}
+
+/** CASE を直接開く。事件簿を経由する導線は別テストで見る。 */
 async function boot(page: Page) {
-  await page.goto('/');
+  await page.goto('/case-001');
+  await dismissHowToPlay(page);
   await expect(page.getByText('深夜0214')).toBeVisible({ timeout: 60_000 });
 }
 
@@ -143,4 +156,50 @@ test('モバイル幅ではタブになり、非選択タブの中身は隠れ�
 
   await page.getByRole('tab', { name: 'SQL' }).click();
   await expect(page.locator('.cm-content')).toBeVisible();
+});
+
+test('事件簿から CASE を開き、ヘッダから事件簿へ戻れる', async ({ page }) => {
+  await page.goto('/');
+  await dismissHowToPlay(page);
+
+  await expect(page.getByRole('heading', { name: 'WHERE' })).toBeVisible();
+  await expect(page.getByText('真実はどこにある？')).toBeVisible();
+
+  // 未着手のうちはバッジが「未着手」。
+  await expect(page.getByText('未着手')).toBeVisible();
+  await page.getByText('消えた100万円').click();
+
+  await expect(page).toHaveURL(/\/case-001$/);
+  await expect(page.getByText('深夜0214')).toBeVisible({ timeout: 60_000 });
+
+  await page.getByRole('button', { name: '事件簿' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { name: 'WHERE' })).toBeVisible();
+});
+
+test('進捗が事件簿のバッジに出る', async ({ page }) => {
+  await boot(page);
+  await runSql(page, WALKTHROUGH[0]![1]);
+  await expect(progress(page)).toContainText('1 / 7');
+
+  await page.getByRole('button', { name: '事件簿' }).click();
+  await expect(page.getByText('調査中 1 / 7')).toBeVisible();
+});
+
+test('遊び方は2回目の訪問では自動で開かず、ボタンから開ける', async ({ page }) => {
+  await page.goto('/');
+  await dismissHowToPlay(page);
+
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'WHERE' })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole('button', { name: '調査をはじめる' })).toBeHidden();
+
+  await page.getByRole('button', { name: '遊び方を見る' }).click();
+  await expect(page.getByRole('heading', { name: '遊び方' })).toBeVisible();
+});
+
+test('知らない CASE の URL を開くと事件簿に落ちる', async ({ page }) => {
+  await page.goto('/case-999');
+  await dismissHowToPlay(page);
+  await expect(page.getByRole('heading', { name: 'WHERE' })).toBeVisible();
 });
