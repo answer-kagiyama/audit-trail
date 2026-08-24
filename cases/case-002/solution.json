@@ -1,0 +1,170 @@
+{
+  "checks": {
+    "obj-01": [
+      {
+        "type": "containsRows",
+        "columns": [
+          "counted_at",
+          "counted_quantity"
+        ],
+        "rows": [
+          [
+            "2026-06-16",
+            18
+          ]
+        ],
+        "options": {
+          "maxRows": 8
+        }
+      }
+    ],
+    "obj-02": [
+      {
+        "type": "containsRows",
+        "columns": [
+          "kind",
+          "quantity"
+        ],
+        "rows": [
+          [
+            "disposal",
+            7
+          ],
+          [
+            "disposal",
+            6
+          ]
+        ],
+        "options": {
+          "maxRows": 20
+        }
+      },
+      {
+        "type": "columnValues",
+        "column": "kind",
+        "values": [
+          "in",
+          "out",
+          "disposal"
+        ],
+        "options": {
+          "exact": true,
+          "maxRows": 20
+        }
+      }
+    ],
+    "obj-03": [
+      {
+        "type": "columnValues",
+        "column": "occurred_at",
+        "values": [
+          "2025-10-20 19:05:00",
+          "2026-01-20 19:50:00"
+        ],
+        "options": {
+          "exact": true,
+          "maxRows": 6
+        }
+      }
+    ],
+    "obj-04": [
+      {
+        "type": "columnValues",
+        "column": "code",
+        "values": [
+          "SX-400"
+        ],
+        "options": {
+          "exact": true,
+          "maxRows": 3
+        }
+      }
+    ],
+    "obj-05": [
+      {
+        "type": "containsRows",
+        "columns": [
+          "id"
+        ],
+        "rows": [
+          [
+            105
+          ],
+          [
+            107
+          ],
+          [
+            111
+          ],
+          [
+            308
+          ]
+        ],
+        "options": {
+          "maxRows": 6
+        }
+      }
+    ],
+    "obj-06": [
+      {
+        "type": "columnValues",
+        "column": "id",
+        "values": [
+          105,
+          107,
+          111
+        ],
+        "options": {
+          "exact": true,
+          "maxRows": 5
+        }
+      }
+    ],
+    "obj-07": [
+      {
+        "type": "columnValues",
+        "column": "name",
+        "values": [
+          "相沢 亮"
+        ],
+        "options": {
+          "exact": true,
+          "maxRows": 3
+        }
+      }
+    ]
+  },
+  "finalAnswer": {
+    "fields": [
+      {
+        "id": "culprit",
+        "label": "SX-400 を持ち出していたのは誰ですか？",
+        "type": "select",
+        "options": [
+          "相沢 亮",
+          "大野 恵",
+          "川瀬 淳",
+          "篠原 美和",
+          "谷口 慎一",
+          "森 政彦",
+          "岡崎 実"
+        ],
+        "correct": "相沢 亮"
+      },
+      {
+        "id": "method",
+        "label": "どのようにして帳簿を合わせていましたか？",
+        "type": "select",
+        "options": [
+          "商品を持ち出し、架空の破損廃棄を計上して帳簿を合わせた",
+          "他人のアカウントで記録を作った",
+          "入庫数を水増しして計上した",
+          "棚卸しのカウント結果を書き換えた",
+          "出庫記録を削除して在庫を多く見せた"
+        ],
+        "correct": "商品を持ち出し、架空の破損廃棄を計上して帳簿を合わせた"
+      }
+    ],
+    "requireAll": true
+  }
+}

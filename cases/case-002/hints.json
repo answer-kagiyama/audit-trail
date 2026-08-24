@@ -1,0 +1,100 @@
+{
+  "obj-01": [
+    {
+      "level": 1,
+      "body": "棚卸し記録は stocktakes にあります。ただし型番（code）は products 側にしかありません。"
+    },
+    {
+      "level": 2,
+      "body": "stocktakes と products を product_id で繋ぎ、code が 'SX-400' の行に絞ります。"
+    },
+    {
+      "level": 3,
+      "body": "SELECT p.code, s.counted_at, s.counted_quantity FROM stocktakes s JOIN products p ON p.id = s.product_id WHERE p.code = 'SX-400' ORDER BY s.counted_at として、4回分を古い順に並べます。"
+    }
+  ],
+  "obj-02": [
+    {
+      "level": 1,
+      "body": "入出庫記録は movements です。ここも product_id しか持たないので、products と繋ぐ必要があります。"
+    },
+    {
+      "level": 2,
+      "body": "SX-400 に絞って、その商品の記録を全部出してください。そのうえで kind 列に何種類の値が入っているかを確かめます。"
+    },
+    {
+      "level": 3,
+      "body": "SELECT m.* FROM movements m JOIN products p ON p.id = m.product_id WHERE p.code = 'SX-400' で17件出ます。kind には 'in'（入庫）・'out'（出庫）・'disposal'（破損廃棄）の3種類があります。"
+    }
+  ],
+  "obj-03": [
+    {
+      "level": 1,
+      "body": "quantity は常に正の数です。in なら足す、out と disposal なら引く——という符号の付け替えが要ります。CASE 式が使えます。"
+    },
+    {
+      "level": 2,
+      "body": "欲しいのは合計ではなく、1行ごとの「そこまでの残高」です。SUM(...) のうしろに OVER (...) を付けると、集計せずに累積を出せます。並び順は occurred_at です。"
+    },
+    {
+      "level": 3,
+      "body": "SUM(CASE WHEN kind='in' THEN quantity ELSE -quantity END) OVER (PARTITION BY product_id ORDER BY occurred_at) で各時点の帳簿在庫が出ます。これを WITH でいったん名前を付け、その結果から残高が 0 未満の行だけを取り出してください。"
+    }
+  ],
+  "obj-04": [
+    {
+      "level": 1,
+      "body": "商品ごとに「廃棄した数」と「入庫した数」を集計し、その比を見ます。"
+    },
+    {
+      "level": 2,
+      "body": "SUM(CASE WHEN kind='disposal' THEN quantity ELSE 0 END) のように、条件付きの合計を1回の GROUP BY でまとめて出せます。"
+    },
+    {
+      "level": 3,
+      "body": "GROUP BY p.code で商品ごとに集計し、廃棄合計 ÷ 入庫合計 の降順に並べて先頭1件を取ります。整数どうしの割り算は切り捨てられるので、1.0 * を掛けてから割ってください。"
+    }
+  ],
+  "obj-05": [
+    {
+      "level": 1,
+      "body": "普通の JOIN は「両方にある」行しか返しません。今回欲しいのは「片方に無い」行です。"
+    },
+    {
+      "level": 2,
+      "body": "LEFT JOIN を使うと、相手が見つからなかった行も残り、その列は NULL になります。その NULL を条件にします。"
+    },
+    {
+      "level": 3,
+      "body": "FROM movements m LEFT JOIN disposal_approvals a ON a.movement_id = m.id WHERE m.kind = 'disposal' AND a.id IS NULL です。NOT EXISTS を使う書き方でも同じ結果になります。"
+    }
+  ],
+  "obj-06": [
+    {
+      "level": 1,
+      "body": "movements には日時の列が2つあります。occurred_at（動いた日時）と created_at（登録された日時）です。"
+    },
+    {
+      "level": 2,
+      "body": "端末がその場で登録するので、通常この2つは同じ値です。ずれている行を探してください。"
+    },
+    {
+      "level": 3,
+      "body": "WHERE created_at > occurred_at と書きます。列を定数と比べるのではなく、同じ行の別の列と比べます。日時は 'YYYY-MM-DD HH:MM:SS' の文字列なので、そのまま大小比較できます。"
+    }
+  ],
+  "obj-07": [
+    {
+      "level": 1,
+      "body": "承認の無い廃棄（obj-05 で出したもの）を、記録者ごとに数えます。"
+    },
+    {
+      "level": 2,
+      "body": "recorded_by で staff と繋いで名前を出し、名前ごとに件数を数えます。1件だけの人は除きます。"
+    },
+    {
+      "level": 3,
+      "body": "GROUP BY s.name したうえで HAVING COUNT(*) > 1 とすると、繰り返している人物だけが残ります。"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "case-002",
+  "version": 1,
+  "title": "改ざんされた在庫",
+  "subtitle": "帳簿は合っていた",
+  "difficulty": 2,
+  "estimatedMinutes": [
+    30,
+    60
+  ],
+  "sqlConcepts": [
+    "JOIN",
+    "GROUP BY",
+    "CASE式",
+    "Window関数",
+    "LEFT JOIN",
+    "CTE"
+  ],
+  "dialect": "sqlite",
+  "files": {
+    "story": "story.json",
+    "schema": "schema.json",
+    "hints": "hints.json",
+    "solution": "solution.json",
+    "database": "database.sqlite"
+  }
+}

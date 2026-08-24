@@ -47,6 +47,11 @@ async function runSql(page: Page, sql: string) {
   await page.keyboard.press('ControlOrMeta+Enter');
 }
 
+/** 事件簿のCASEカード。CASEが増えたので、バッジは必ずカード単位で見る。 */
+function caseCard(page: Page, caseId: string) {
+  return page.getByRole('button', { name: new RegExp(caseId, 'i') });
+}
+
 /** Story パネルの「n / 7」を読む。 */
 function progress(page: Page) {
   return page.locator('section').filter({ hasText: 'STORY' }).first();
@@ -165,9 +170,10 @@ test('事件簿から CASE を開き、ヘッダから事件簿へ戻れる', as
   await expect(page.getByRole('heading', { name: 'WHERE' })).toBeVisible();
   await expect(page.getByText('真実はどこにある？')).toBeVisible();
 
-  // 未着手のうちはバッジが「未着手」。
-  await expect(page.getByText('未着手')).toBeVisible();
-  await page.getByText('消えた100万円').click();
+  // 事件簿には複数のCASEが並ぶ。バッジはカードの中を見る。
+  await expect(caseCard(page, 'CASE-001')).toContainText('未着手');
+  await expect(caseCard(page, 'CASE-002')).toContainText('改ざんされた在庫');
+  await caseCard(page, 'CASE-001').click();
 
   await expect(page).toHaveURL(/\/case-001$/);
   await expect(page.getByText('深夜0214')).toBeVisible({ timeout: 60_000 });
@@ -183,7 +189,9 @@ test('進捗が事件簿のバッジに出る', async ({ page }) => {
   await expect(progress(page)).toContainText('1 / 7');
 
   await page.getByRole('button', { name: '事件簿' }).click();
-  await expect(page.getByText('調査中 1 / 7')).toBeVisible();
+  await expect(caseCard(page, 'CASE-001')).toContainText('調査中 1 / 7');
+  // 別のCASEの進捗には影響しない。
+  await expect(caseCard(page, 'CASE-002')).toContainText('未着手');
 });
 
 test('遊び方は2回目の訪問では自動で開かず、ボタンから開ける', async ({ page }) => {
