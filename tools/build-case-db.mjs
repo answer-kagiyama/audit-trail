@@ -3,7 +3,7 @@
  * CASE の seed.sql から database.sqlite を生成する。
  *
  *   node tools/build-case-db.mjs cases/case-001
- *   node tools/build-case-db.mjs --check cases/case-001   # 差分があれば失敗
+ *   node tools/build-case-db.mjs --check cases/*          # 全CASEを検査（CIはこれ）
  *
  * seed.sql が唯一の真実で、database.sqlite は生成物。
  * バイナリを直接編集すると差分レビューが不可能になり、人もAIも変更を追えなくなる。
@@ -13,7 +13,7 @@
  */
 import { createRequire } from "node:module";
 import { readFile, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -42,6 +42,14 @@ for (const caseDir of caseDirs) {
   const seedPath = resolve(caseDir, "seed.sql");
   const dbPath = resolve(caseDir, "database.sqlite");
   const name = basename(caseDir);
+
+  // cases/* のグロブにファイルが紛れ込むことがある。黙って飛ばすと
+  // 「検査したつもりで漏れている」状態になるので、はっきり落とす。
+  if (!existsSync(caseDir) || !statSync(caseDir).isDirectory()) {
+    console.error(`✗ ${name}: CASEディレクトリではありません (${caseDir})`);
+    failed = true;
+    continue;
+  }
 
   if (!existsSync(seedPath)) {
     console.error(`✗ ${name}: seed.sql がありません (${seedPath})`);

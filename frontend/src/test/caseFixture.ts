@@ -5,7 +5,7 @@
  * caseLoader の parse* を通す**。これにより、CASE 001 が実際に
  * ローダーの検証を通ることもテストのたびに確かめられる。
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -46,6 +46,20 @@ export interface LoadedCase {
 
 function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, 'utf8')) as unknown;
+}
+
+/**
+ * cases/ にあるCASEを全部数え上げる。
+ *
+ * 構造検証のテストは「いま存在するCASE全部」に掛けたい。ここを手書きの
+ * 配列にすると、CASEを足した人が更新を忘れて検証から漏れる——それを
+ * 防ぐために、ディレクトリを正とする。
+ */
+export function allCaseIds(): string[] {
+  return readdirSync(resolve(repoRoot, 'cases'), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
 }
 
 /** テストの実行時間を無駄にしないよう、CASE ごとに一度だけ読む。 */

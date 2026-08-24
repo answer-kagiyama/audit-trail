@@ -52,8 +52,9 @@ Claude が設計資料を書き、Phase ごとに実装 → テスト → レビ
 | [docs/architecture.md](./docs/architecture.md) | 技術構成、レイヤ境界、テスト戦略 |
 | [docs/case-format.md](./docs/case-format.md) | CASEデータ仕様（JSON構造・判定ルール） |
 | [docs/roadmap.md](./docs/roadmap.md) | Phase 0〜6 と Definition of Done |
-| [docs/mvp-issues.md](./docs/mvp-issues.md) | 実装タスク36件（依存関係順） |
+| [docs/mvp-issues.md](./docs/mvp-issues.md) | 実装タスク37件（依存関係順） |
 | [docs/cases/case-001.md](./docs/cases/case-001.md) | CASE 001「消えた100万円」仕様 ⚠️ネタバレ |
+| [docs/cases/case-002.md](./docs/cases/case-002.md) | CASE 002「改ざんされた在庫」設計 ⚠️ネタバレ |
 | [docs/adr/](./docs/adr/) | 技術方針の決定記録 |
 | [AGENTS.md](./AGENTS.md) | AIエージェント／コントリビューター向け規約 |
 | [docs/handoff.md](./docs/handoff.md) | 最初の開発引き継ぎ資料（原本。歴史的記録） |

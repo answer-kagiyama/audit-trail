@@ -383,7 +383,15 @@ CASE 001 では、たとえば obj-04 の想定解が 50 行、`access_logs` 全
 
 ## 8. CASE追加時のチェックリスト
 
-新しいCASEを追加する（またはCASE 001を変更する）ときは、以下をすべて満たすこと。
+新しいCASEを追加する（または既存CASEを変更する）ときは、以下をすべて満たすこと。
+
+> **`cases/` にディレクトリを置いた時点で自動的に掛かるもの**（登録作業は不要）:
+> `cases:check`（seed.sql と database.sqlite の一致）と
+> `caseStructure.test.ts`（schema.json と実DBの一致・FKとER図・DAGの循環・
+> ヒント網羅・DBサイズ）。どちらも `cases/` の中身を正として全CASEに回る。
+>
+> **CASEごとに手で書く必要があるもの**: 正解例・不正解例の検証テスト
+> （`case-001.test.ts` に相当するファイル）。事件の中身に依存するため自動化できない。
 
 - [ ] `seed.sql` を書き、`build-case-db.mjs` で `database.sqlite` を生成した
 - [ ] `metadata.json` の `version` を上げた（既存CASEの変更時）
