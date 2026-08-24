@@ -16,7 +16,8 @@
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
 import { allCaseIds, loadCase } from '../test/caseFixture.ts';
 import type { LoadedCase } from '../test/caseFixture.ts';
-import { computeBoxes } from '../ui/DatabasePanel/ErDiagram/layout.ts';
+import { computeBoxes, orthogonalPoints } from '../ui/DatabasePanel/ErDiagram/layout.ts';
+import { chooseSides, anchorOn } from '../ui/DatabasePanel/ErDiagram/layout.ts';
 
 describe.each(allCaseIds())('%s', (caseId) => {
   let c: LoadedCase;
@@ -226,6 +227,118 @@ describe.each(allCaseIds())('%s', (caseId) => {
         expect(box.y + box.height, `${box.table} が下にはみ出しています`).toBeLessThanOrEqual(
           c.schema.erCanvas.height,
         );
+      }
+    });
+
+    /**
+     * ER図の線を実際に引いてみて、読めない図になっていないかを見る。
+     *
+     * これは「描画して目視する」というチェックリスト項目
+     * （case-format.md §8）を機械化したもの。**本番と同じ関数**で経路を
+     * 出すので、描かれている線とテストが食い違うことがない。
+     *
+     * CASE 002 の初稿は、2本の線が 20px 差の縦通路を共有して重なって見えていた。
+     * 目視だけに頼ると、CASEが増えるほど見落とす。
+     */
+    function relationSegments() {
+      const boxes = computeBoxes(c.schema);
+      return c.schema.relations.flatMap((relation) => {
+        const from = boxes.get(relation.from.table);
+        const to = boxes.get(relation.to.table);
+        if (!from || !to) return [];
+        const sides = chooseSides(from, to);
+        const points = orthogonalPoints(
+          anchorOn(from, sides.from, relation.from.column),
+          anchorOn(to, sides.to, relation.to.column),
+        );
+        const segments = points.slice(0, -1).flatMap((start, index) => {
+          const end = points[index + 1];
+          if (!end || (start.x === end.x && start.y === end.y)) return [];
+          return [{ start, end, vertical: start.x === end.x }];
+        });
+        return [{ id: relation.id, tables: [relation.from.table, relation.to.table], segments }];
+      });
+    }
+
+    const span = (a: number, b: number): [number, number] => [Math.min(a, b), Math.max(a, b)];
+    const overlaps = ([a1, a2]: [number, number], [b1, b2]: [number, number]): boolean =>
+      a1 <= b2 && b1 <= a2;
+
+    it('線どうしが交差していない', () => {
+      const paths = relationSegments();
+      for (let i = 0; i < paths.length; i += 1) {
+        for (let j = i + 1; j < paths.length; j += 1) {
+          const a = paths[i];
+          const b = paths[j];
+          if (!a || !b) continue;
+          // 同じテーブルに繋がる線は、その箱の手前で寄るのが自然なので除く。
+          if (a.tables.some((table) => b.tables.includes(table))) continue;
+
+          for (const sa of a.segments) {
+            for (const sb of b.segments) {
+              if (sa.vertical === sb.vertical) continue;
+              const v = sa.vertical ? sa : sb;
+              const h = sa.vertical ? sb : sa;
+              const crosses =
+                v.start.x >= Math.min(h.start.x, h.end.x) &&
+                v.start.x <= Math.max(h.start.x, h.end.x) &&
+                h.start.y >= Math.min(v.start.y, v.end.y) &&
+                h.start.y <= Math.max(v.start.y, v.end.y);
+              expect(crosses, `${a.id} と ${b.id} の線が交差しています`).toBe(false);
+            }
+          }
+        }
+      }
+    });
+
+    it('線どうしが重なって見えるほど近くを並走していない', () => {
+      const MIN_GAP = 30;
+      const paths = relationSegments();
+      for (let i = 0; i < paths.length; i += 1) {
+        for (let j = i + 1; j < paths.length; j += 1) {
+          const a = paths[i];
+          const b = paths[j];
+          if (!a || !b) continue;
+
+          for (const sa of a.segments) {
+            for (const sb of b.segments) {
+              if (sa.vertical !== sb.vertical) continue;
+              const gap = sa.vertical
+                ? Math.abs(sa.start.x - sb.start.x)
+                : Math.abs(sa.start.y - sb.start.y);
+              if (gap >= MIN_GAP) continue;
+              const along = sa.vertical
+                ? overlaps(span(sa.start.y, sa.end.y), span(sb.start.y, sb.end.y))
+                : overlaps(span(sa.start.x, sa.end.x), span(sb.start.x, sb.end.x));
+              expect(
+                along,
+                `${a.id} と ${b.id} の線が ${String(Math.round(gap))}px しか離れずに並走しています`,
+              ).toBe(false);
+            }
+          }
+        }
+      }
+    });
+
+    it('線が無関係な箱を貫通していない', () => {
+      const boxes = [...computeBoxes(c.schema).values()];
+      const MARGIN = 4;
+      for (const path of relationSegments()) {
+        for (const box of boxes) {
+          if (path.tables.includes(box.table)) continue;
+          for (const segment of path.segments) {
+            const through =
+              overlaps(span(segment.start.x, segment.end.x), [
+                box.x + MARGIN,
+                box.x + box.width - MARGIN,
+              ]) &&
+              overlaps(span(segment.start.y, segment.end.y), [
+                box.y + MARGIN,
+                box.y + box.height - MARGIN,
+              ]);
+            expect(through, `${path.id} の線が ${box.table} の箱を通っています`).toBe(false);
+          }
+        }
       }
     });
 

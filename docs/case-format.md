@@ -411,7 +411,8 @@ CASE 001 では、たとえば obj-04 の想定解が 50 行、`access_logs` 全
 - [ ] `schema.json` の `sampleRows` が実データと一致している
 - [ ] `schema.json` のテーブル・カラムが `database.sqlite` と一致している（自動検証あり）
 - [ ] すべてのFK列に `key: "fk"` が付き、`relations` に対応する定義がある
-- [ ] `erLayout` / `erCanvas` を指定し、**実際に描画して線が交差していないことを目視した**
+- [ ] `erLayout` / `erCanvas` を指定した（線の交差・並走・箱の貫通は自動検証あり。
+      最後に一度は実際に描画して見ること）
 - [ ] すべての `relations` に日本語の `label` がある
 - [ ] すべてのObjectiveに `checks` がある
 - [ ] すべてのObjectiveに3段階のヒントがある

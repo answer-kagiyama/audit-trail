@@ -1,0 +1,405 @@
+{
+  "tables": [
+    {
+      "name": "products",
+      "description": "商品マスタ。倉庫が扱う品目。",
+      "erLayout": {
+        "x": 60,
+        "y": 70
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "商品ID（主キー）"
+        },
+        {
+          "name": "code",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "型番。'SX-400' のような文字列。人が商品を指すときはこれを使う。"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "商品名。"
+        },
+        {
+          "name": "category",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "分類。'sensor' / 'cable' / 'case' のいずれか。"
+        },
+        {
+          "name": "unit_price",
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "単価（円）。"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 1,
+          "code": "SX-400",
+          "name": "産業用センサー",
+          "category": "sensor",
+          "unit_price": 80000
+        },
+        {
+          "id": 3,
+          "code": "CB-100",
+          "name": "接続ケーブル",
+          "category": "cable",
+          "unit_price": 1800
+        },
+        {
+          "id": 5,
+          "code": "HS-900",
+          "name": "防塵筐体",
+          "category": "case",
+          "unit_price": 120000
+        }
+      ]
+    },
+    {
+      "name": "staff",
+      "description": "倉庫スタッフ名簿。退職者も残っている。",
+      "erLayout": {
+        "x": 700,
+        "y": 70
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "スタッフID（主キー）"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "氏名。姓と名の間は半角スペース。"
+        },
+        {
+          "name": "role",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "職種。'warehouse'（倉庫係） / 'inspector'（検品） / 'manager'（管理者）。**破損廃棄を承認できるのは inspector だけ。**"
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "在籍状況。'active'（在籍中）または 'retired'（退職済み）。"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 1,
+          "name": "相沢 亮",
+          "role": "warehouse",
+          "status": "active"
+        },
+        {
+          "id": 4,
+          "name": "篠原 美和",
+          "role": "inspector",
+          "status": "active"
+        },
+        {
+          "id": 7,
+          "name": "岡崎 実",
+          "role": "warehouse",
+          "status": "retired"
+        }
+      ]
+    },
+    {
+      "name": "movements",
+      "description": "入出庫記録。倉庫でモノが動くたびに1行増える。",
+      "erLayout": {
+        "x": 330,
+        "y": 190
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "記録ID（主キー）"
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "動いた商品。products.id を指す。"
+        },
+        {
+          "name": "kind",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "記録の種類。'in'（入庫） / 'out'（出庫） / 'disposal'（破損廃棄）。"
+        },
+        {
+          "name": "quantity",
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "数量。**種類にかかわらず常に正の数**。在庫を計算するときは kind を見て符号を決めること。"
+        },
+        {
+          "name": "occurred_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "モノが実際に動いた日時。'YYYY-MM-DD HH:MM:SS' 形式。"
+        },
+        {
+          "name": "recorded_by",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "この記録を登録したスタッフ。staff.id を指す。"
+        },
+        {
+          "name": "created_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "記録がシステムに登録された日時。'YYYY-MM-DD HH:MM:SS' 形式。入出庫はハンディ端末でその場で登録する運用になっている。"
+        },
+        {
+          "name": "note",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "摘要。"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 101,
+          "product_id": 1,
+          "kind": "in",
+          "quantity": 40,
+          "occurred_at": "2025-07-07 09:12:00",
+          "recorded_by": 2,
+          "created_at": "2025-07-07 09:12:00",
+          "note": "定期入荷"
+        },
+        {
+          "id": 107,
+          "product_id": 1,
+          "kind": "disposal",
+          "quantity": 7,
+          "occurred_at": "2025-10-20 19:05:00",
+          "recorded_by": 1,
+          "created_at": "2025-12-27 21:35:00",
+          "note": "落下による破損"
+        },
+        {
+          "id": 115,
+          "product_id": 1,
+          "kind": "disposal",
+          "quantity": 2,
+          "occurred_at": "2026-04-20 14:30:00",
+          "recorded_by": 2,
+          "created_at": "2026-04-20 14:30:00",
+          "note": "検品で不良判定"
+        }
+      ]
+    },
+    {
+      "name": "stocktakes",
+      "description": "棚卸し記録。四半期ごとに実地で数える。帳簿在庫は持たない——それは入出庫記録から組み立てるもの。",
+      "erLayout": {
+        "x": 60,
+        "y": 350
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "棚卸しID（主キー）"
+        },
+        {
+          "name": "product_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "数えた商品。products.id を指す。"
+        },
+        {
+          "name": "counted_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "棚卸し日。'YYYY-MM-DD' 形式。"
+        },
+        {
+          "name": "counted_quantity",
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "実地で数えた数。"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 1,
+          "product_id": 1,
+          "counted_at": "2025-09-30",
+          "counted_quantity": 30
+        },
+        {
+          "id": 16,
+          "product_id": 1,
+          "counted_at": "2026-06-16",
+          "counted_quantity": 18
+        },
+        {
+          "id": 20,
+          "product_id": 5,
+          "counted_at": "2026-06-16",
+          "counted_quantity": 72
+        }
+      ]
+    },
+    {
+      "name": "disposal_approvals",
+      "description": "破損廃棄の承認記録。廃棄1件につき最大1行。**ここに対応する行が無い廃棄は、承認を通っていない。**",
+      "erLayout": {
+        "x": 600,
+        "y": 345
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "承認ID（主キー）"
+        },
+        {
+          "name": "movement_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "承認した廃棄。movements.id を指す。"
+        },
+        {
+          "name": "approver_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "承認した検品担当。staff.id を指す。"
+        },
+        {
+          "name": "approved_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "承認日時。'YYYY-MM-DD HH:MM:SS' 形式。"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 1,
+          "movement_id": 115,
+          "approver_id": 4,
+          "approved_at": "2026-04-20 17:05:00"
+        },
+        {
+          "id": 3,
+          "movement_id": 306,
+          "approver_id": 5,
+          "approved_at": "2025-12-08 17:50:00"
+        },
+        {
+          "id": 5,
+          "movement_id": 509,
+          "approver_id": 5,
+          "approved_at": "2026-03-12 17:55:00"
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel-mv-product",
+      "from": {
+        "table": "movements",
+        "column": "product_id"
+      },
+      "to": {
+        "table": "products",
+        "column": "id"
+      },
+      "cardinality": "many-to-one",
+      "label": "動いた商品",
+      "description": "その記録で入出庫・廃棄された商品。"
+    },
+    {
+      "id": "rel-mv-staff",
+      "from": {
+        "table": "movements",
+        "column": "recorded_by"
+      },
+      "to": {
+        "table": "staff",
+        "column": "id"
+      },
+      "cardinality": "many-to-one",
+      "label": "記録した担当者",
+      "description": "その記録を登録したスタッフ。モノを動かした人とは限らない。"
+    },
+    {
+      "id": "rel-st-product",
+      "from": {
+        "table": "stocktakes",
+        "column": "product_id"
+      },
+      "to": {
+        "table": "products",
+        "column": "id"
+      },
+      "cardinality": "many-to-one",
+      "label": "数えた商品",
+      "description": "棚卸しで実地カウントした商品。"
+    },
+    {
+      "id": "rel-ap-mv",
+      "from": {
+        "table": "disposal_approvals",
+        "column": "movement_id"
+      },
+      "to": {
+        "table": "movements",
+        "column": "id"
+      },
+      "cardinality": "many-to-one",
+      "label": "承認された廃棄",
+      "description": "承認が下りた破損廃棄の記録。無い廃棄もある。"
+    },
+    {
+      "id": "rel-ap-staff",
+      "from": {
+        "table": "disposal_approvals",
+        "column": "approver_id"
+      },
+      "to": {
+        "table": "staff",
+        "column": "id"
+      },
+      "cardinality": "many-to-one",
+      "label": "承認した検品担当",
+      "description": "廃棄を承認した検品担当者。"
+    }
+  ],
+  "erCanvas": {
+    "width": 900,
+    "height": 520
+  }
+}

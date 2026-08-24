@@ -160,7 +160,7 @@ CASE検証テスト47本（正解例30・不正解例22を含む）が緑。
 
 ## Phase 7 以降（MVPの外）
 
-- CASE 002「改ざんされた在庫」（`#37`。設計済み → [cases/case-002.md](./cases/case-002.md)）
+- [x] CASE 002「改ざんされた在庫」（`#37`。実装済み → [cases/case-002.md](./cases/case-002.md)）
 - CASE 003以降（`LAG` / `LEAD` を扱う難易度帯）
 - SQLエディタの複数タブ（`#36`）
 - PostgreSQL実行エンジン（[architecture.md §9](./architecture.md#9-postgresql移行の道筋mvpでは実装しない)）
