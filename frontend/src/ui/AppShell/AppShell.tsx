@@ -19,22 +19,44 @@ export interface AppShellProps {
   database: ReactNode;
   editor: ReactNode;
   result: ReactNode;
+  /** ヘッダに出す、いま調査中の事件名。 */
+  caseTitle: string;
   theme: ThemePreference;
   onThemeChange: (next: ThemePreference) => void;
+  onBackToIndex: () => void;
+  onOpenHowToPlay: () => void;
 }
 
 /** tokens.css の --breakpoint-wide と揃えること。 */
 const WIDE_QUERY = '(min-width: 900px)';
 
-export function AppShell({ story, database, editor, result, theme, onThemeChange }: AppShellProps) {
+export function AppShell({
+  story,
+  database,
+  editor,
+  result,
+  caseTitle,
+  theme,
+  onThemeChange,
+  onBackToIndex,
+  onOpenHowToPlay,
+}: AppShellProps) {
   const isWide = useMediaQuery(WIDE_QUERY);
 
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Audit Trail</h1>
-        <span className={styles.subtitle}>記録は、誰が何をしたかを覚えている。</span>
+        <button type="button" className={styles.title} onClick={onBackToIndex} title="事件簿へ戻る">
+          WHERE
+        </button>
+        <span className={styles.caseTitle}>{caseTitle}</span>
         <div className={styles.headerActions}>
+          <button type="button" className={styles.headerButton} onClick={onOpenHowToPlay}>
+            遊び方
+          </button>
+          <button type="button" className={styles.headerButton} onClick={onBackToIndex}>
+            事件簿
+          </button>
           <ThemeToggle preference={theme} onChange={onThemeChange} />
         </div>
       </header>

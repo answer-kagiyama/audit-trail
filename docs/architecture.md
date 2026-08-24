@@ -125,39 +125,55 @@ PostgreSQLでも表現できる形に正規化してから返す。
 │   ├── mvp-issues.md
 │   ├── adr/
 │   └── cases/case-001.md
+├── vercel.json               ← リポジトリ直下でビルドする（cases/ が要るため）
 ├── frontend/
 │   ├── index.html
 │   ├── vite.config.ts
+│   ├── playwright.config.ts
+│   ├── e2e/                  ← Playwright（実ブラウザでしか壊れないものだけ）
+│   ├── scripts/
+│   │   ├── sync-cases.mjs    # /cases → public/cases コピー + index.json 生成
+│   │   └── make-fixtures.mjs
 │   ├── public/
-│   │   └── cases/            ← ビルド時に /cases からコピー
+│   │   └── cases/            ← ビルド時に /cases から生成（コミットしない）
 │   └── src/
 │       ├── engine/           ← SQL実行層（ゲームを知らない）
 │       │   ├── types.ts          # SqlEngine / QueryResult の契約
-│       │   ├── sqlJsEngine.ts    # Worker のクライアント側ラッパー
-│       │   ├── worker.ts         # Worker本体（sql.js をここでロード）
+│       │   ├── workerEngine.ts   # Worker のクライアント側ラッパー
+│       │   ├── sqlJsCore.ts      # sql.js の薄いラッパー（Node からも使う）
+│       │   ├── worker.ts         # Worker本体
 │       │   ├── protocol.ts       # Worker との postMessage 型定義
 │       │   └── guard.ts          # 読み取り専用ガード
 │       ├── game/             ← 純粋TS。React も WASM も知らない
+│       │   ├── caseIndex.ts      # 事件簿（一覧）の読み込みと進捗バッジ
 │       │   ├── caseLoader.ts     # CASEアセットの fetch + スキーマ検証
 │       │   ├── caseTypes.ts      # CASEデータのTS型
 │       │   ├── checks.ts         # 判定ロジック（純関数）
 │       │   ├── normalize.ts      # 値の正規化（判定の中核）
 │       │   ├── progression.ts    # Objective DAG の状態遷移（純関数）
 │       │   ├── errorMap.ts       # SQLエラー → 日本語メッセージ
+│       │   ├── editDistance.ts   # 「もしかして」の候補出し
 │       │   └── save.ts           # localStorage シリアライズ
 │       ├── ui/
-│       │   ├── App.tsx
+│       │   ├── CaseIndex/           # 事件簿（タイトル画面）
+│       │   ├── HowToPlay/           # 遊び方（初回に自動で開く）
+│       │   ├── CaseSession.tsx      # CASE 1本のプレイ画面（配線はここ）
+│       │   ├── AppShell/            # ヘッダとレイアウト
+│       │   ├── BootScreen/
 │       │   ├── StoryPanel/
 │       │   ├── DatabasePanel/
 │       │   │   ├── ErDiagram/       # schema.json から インラインSVG で描画
 │       │   │   └── TableDetail/
 │       │   ├── SqlEditor/
 │       │   ├── ResultTable/
-│       │   └── FinalAnswer/
+│       │   ├── ObjectiveCleared/
+│       │   ├── FinalAnswer/
+│       │   ├── ThemeToggle/
+│       │   └── hooks/               # useMediaQuery / useRoute
 │       ├── styles/
-│       │   └── tokens.css        # 色・間隔・フォントのCSSカスタムプロパティ
-│       ├── state/
-│       │   └── gameReducer.ts    # UI状態 = progression の薄いラッパー
+│       │   ├── tokens.css        # 色・間隔・フォントのCSSカスタムプロパティ
+│       │   └── global.css
+│       ├── App.tsx           ← 経路の振り分けだけ（事件簿 or CaseSession）
 │       └── main.tsx
 ├── cases/
 │   └── case-001/
@@ -168,11 +184,13 @@ PostgreSQLでも表現できる形に正規化してから返す。
 │       ├── solution.json
 │       ├── seed.sql          ← 正
 │       └── database.sqlite   ← seed.sql からビルド生成（コミットする）
-├── tools/
-│   └── build-case-db.mjs     # seed.sql → database.sqlite
-└── tests/
-    └── cases/                # CASE検証テスト（各Objectiveが解けることの保証）
+└── tools/
+    └── build-case-db.mjs     # seed.sql → database.sqlite
 ```
+
+CASE検証テスト（各Objectiveが実際に解けることの保証）は
+`frontend/src/game/case-001.test.ts` にある。Node 上で sql.js を直接叩き、
+`solution.json` の各正解SQLが判定を通ることを確かめる。
 
 **`seed.sql` が正で `database.sqlite` が生成物**である点が重要。バイナリを直接編集すると
 差分レビューができず、AIエージェントも人間も変更を追えない。
