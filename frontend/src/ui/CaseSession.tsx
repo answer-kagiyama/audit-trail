@@ -18,6 +18,7 @@ import {
   allObjectivesCompleted,
   applyQueryResult,
   initialProgress,
+  revealAnswer,
   revealHint,
   submitFinalAnswer,
 } from '../game/progression.ts';
@@ -34,6 +35,7 @@ import type { ResultState } from './ResultTable/ResultTable.tsx';
 import { SqlEditor } from './SqlEditor/SqlEditor.tsx';
 import { useWorkspace } from './SqlEditor/useWorkspace.ts';
 import {
+  activeTab,
   addTab,
   closeTab,
   pushHistory,
@@ -207,6 +209,25 @@ export function CaseSession({
     setCleared(null);
   }, [caseId, loaded, resetWorkspace]);
 
+  /**
+   * 答えを見る。SQLは**エディタに入れるだけで実行はしない**。
+   *
+   * 自動で達成にしてしまうと、答えを読まずに次へ進めてしまう。
+   * 自分で実行して結果を見るところまでを残すことで、
+   * 「なぜこれで分かるのか」を確かめる余地が残る。
+   */
+  const onRevealAnswer = useCallback(
+    (objectiveId: string) => {
+      if (!loaded || !progress) return;
+      const sql = loaded.caseData.solution.exampleSql[objectiveId];
+      if (sql === undefined) return;
+
+      commit(revealAnswer(progress, objectiveId));
+      updateWorkspace((previous) => setSql(previous, activeTab(previous).id, sql));
+    },
+    [loaded, progress, commit, updateWorkspace],
+  );
+
   const onSubmitFinalAnswer = useCallback(
     (answers: Record<string, string>): boolean => {
       if (!loaded || !progress) return false;
@@ -237,6 +258,7 @@ export function CaseSession({
             onRevealHint={(objectiveId) => {
               commit(revealHint(loaded.caseData, progress, objectiveId));
             }}
+            onRevealAnswer={onRevealAnswer}
             onOpenFinalAnswer={() => setFinalOpen(true)}
             onReset={onReset}
           />

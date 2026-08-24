@@ -173,6 +173,10 @@ function ClearedView({
           <span className={styles.recordValue}>{totalHintsRevealed(progress)}</span>
         </div>
         <div className={styles.recordItem}>
+          <span className={styles.recordLabel}>答えを見た</span>
+          <span className={styles.recordValue}>{progress.revealedAnswers.length}</span>
+        </div>
+        <div className={styles.recordItem}>
           <span className={styles.recordLabel}>回答試行</span>
           <span className={styles.recordValue}>{progress.finalAnswerAttempts}</span>
         </div>

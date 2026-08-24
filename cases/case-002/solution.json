@@ -134,6 +134,15 @@
       }
     ]
   },
+  "exampleSql": {
+    "obj-01": "SELECT p.code, s.counted_at, s.counted_quantity\nFROM stocktakes s\nJOIN products p ON p.id = s.product_id\nWHERE p.code = 'SX-400'\nORDER BY s.counted_at",
+    "obj-02": "SELECT m.*\nFROM movements m\nJOIN products p ON p.id = m.product_id\nWHERE p.code = 'SX-400'\nORDER BY m.occurred_at",
+    "obj-03": "WITH ledger AS (\n  SELECT product_id, occurred_at,\n         SUM(CASE WHEN kind = 'in' THEN quantity ELSE -quantity END)\n           OVER (PARTITION BY product_id ORDER BY occurred_at) AS book_qty\n  FROM movements\n)\nSELECT l.occurred_at, p.code, l.book_qty\nFROM ledger l\nJOIN products p ON p.id = l.product_id\nWHERE l.book_qty < 0\nORDER BY l.occurred_at",
+    "obj-04": "SELECT p.code,\n       SUM(CASE WHEN m.kind = 'disposal' THEN m.quantity ELSE 0 END) AS disposed,\n       SUM(CASE WHEN m.kind = 'in'       THEN m.quantity ELSE 0 END) AS received\nFROM movements m\nJOIN products p ON p.id = m.product_id\nGROUP BY p.code\nORDER BY 1.0 * disposed / received DESC\nLIMIT 1",
+    "obj-05": "SELECT m.id, p.code, m.occurred_at, m.created_at\nFROM movements m\nLEFT JOIN disposal_approvals a ON a.movement_id = m.id\nJOIN products p ON p.id = m.product_id\nWHERE m.kind = 'disposal' AND a.id IS NULL\nORDER BY m.id",
+    "obj-06": "SELECT m.id, m.occurred_at, m.created_at, s.name\nFROM movements m\nJOIN staff s ON s.id = m.recorded_by\nWHERE m.created_at > m.occurred_at\nORDER BY m.id",
+    "obj-07": "SELECT s.name, COUNT(*) AS n\nFROM movements m\nLEFT JOIN disposal_approvals a ON a.movement_id = m.id\nJOIN staff s ON s.id = m.recorded_by\nWHERE m.kind = 'disposal' AND a.id IS NULL\nGROUP BY s.name\nHAVING COUNT(*) > 1"
+  },
   "finalAnswer": {
     "fields": [
       {

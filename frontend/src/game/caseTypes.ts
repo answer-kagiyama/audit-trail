@@ -118,6 +118,15 @@ export interface StoryDoc {
 
 export interface SolutionDoc {
   checks: Record<string, Check[]>;
+  /**
+   * Objective ごとの「正解SQLの一例」。ヒントを使い切ってなお進めない人に見せる。
+   *
+   * 正解は1つではないので、あくまで**一例**。
+   * ここに置いたSQLが実際に checks を通ることは
+   * `caseStructure.test.ts` が全CASEで毎回確かめる——
+   * 間違った答えを見せるのが、この機能で一番まずい壊れ方なので。
+   */
+  exampleSql: Record<string, string>;
   finalAnswer: FinalAnswerSpec;
 }
 

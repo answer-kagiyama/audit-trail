@@ -133,6 +133,12 @@ function asProgress(value: unknown): ProgressState | undefined {
   const revealedHints = asLevelMap(record['revealedHints']);
   if (!completedObjectives || !evidence || !storyBeats || !revealedHints) return undefined;
 
+  // 「答えを見る」より前のセーブには無い項目。欠けていても捨てない——
+  // 表示にしか使わないので、無ければ「一度も見ていない」で辻褄が合う。
+  // ここで弾くと、機能を足しただけで全員の進捗が消える。
+  const revealedAnswers = asStringArray(record['revealedAnswers'] ?? []);
+  if (!revealedAnswers) return undefined;
+
   const queryCount = asNumber(record['queryCount']);
   const finalAnswerAttempts = asNumber(record['finalAnswerAttempts']);
   const startedAt = asNumber(record['startedAt']);
@@ -146,6 +152,7 @@ function asProgress(value: unknown): ProgressState | undefined {
 
   return {
     completedObjectives,
+    revealedAnswers,
     evidence,
     storyBeats,
     revealedHints,

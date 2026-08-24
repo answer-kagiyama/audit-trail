@@ -5,7 +5,7 @@
  * 「マウントする / 値を出し入れする / キーバインドを足す」だけで、
  * ラッパーの抽象を挟むと CodeMirror 側の都合が見えなくなる。
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { EditorState } from '@codemirror/state';
 import { EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
@@ -146,21 +146,26 @@ export function useCodeMirror(options: UseCodeMirrorOptions): CodeMirrorHandle {
     view.focus();
   }, [options.docKey, options.initialValue]);
 
-  return {
-    containerRef,
-    setValue: (value: string) => {
-      const view = viewRef.current;
-      if (!view || view.state.doc.toString() === value) return;
-      view.dispatch({
-        changes: { from: 0, to: view.state.doc.length, insert: value },
-        selection: { anchor: value.length },
-      });
-    },
-    focus: () => {
-      viewRef.current?.focus();
-    },
-    forget: (docKey: string) => {
-      statesRef.current.delete(docKey);
-    },
-  };
+  // 呼び出し側が effect の依存に入れられるよう、ハンドルは作り直さない。
+  // 中身は ref しか触らないので、固定しても古い値を掴むことはない。
+  return useMemo<CodeMirrorHandle>(
+    () => ({
+      containerRef,
+      setValue: (value: string) => {
+        const view = viewRef.current;
+        if (!view || view.state.doc.toString() === value) return;
+        view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: value },
+          selection: { anchor: value.length },
+        });
+      },
+      focus: () => {
+        viewRef.current?.focus();
+      },
+      forget: (docKey: string) => {
+        statesRef.current.delete(docKey);
+      },
+    }),
+    [],
+  );
 }

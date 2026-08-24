@@ -10,6 +10,8 @@ import {
   revealedHintsFor,
   submitFinalAnswer,
   totalHintsRevealed,
+  canRevealAnswer,
+  revealAnswer,
 } from './progression.ts';
 import type { ProgressState } from './progression.ts';
 import type { CaseData } from './caseTypes.ts';
@@ -237,5 +239,57 @@ describe('ヒント', () => {
     state = revealHint(caseData, state, 'obj-01');
     state = revealHint(caseData, state, 'obj-03');
     expect(totalHintsRevealed(state)).toBe(3);
+  });
+});
+
+// ============================================================================
+// 答えを見る（詰まったときの最後の逃げ道）
+// ============================================================================
+describe('答えの開示', () => {
+  it('ヒントが残っているうちは出さない', () => {
+    // 最初から押せる場所にあると、考える前に押せてしまう。
+    const state = initialProgress(0);
+    expect(canRevealAnswer(fixture.caseData, state, 'obj-01')).toBe(false);
+  });
+
+  it('ヒントを全部開いたら出る', () => {
+    let state = initialProgress(0);
+    const levels = fixture.caseData.hints['obj-01']?.length ?? 0;
+    for (let i = 0; i < levels; i += 1) {
+      state = revealHint(fixture.caseData, state, 'obj-01');
+    }
+    expect(canRevealAnswer(fixture.caseData, state, 'obj-01')).toBe(true);
+  });
+
+  it('一度見たら、もう出ない', () => {
+    let state = initialProgress(0);
+    const levels = fixture.caseData.hints['obj-01']?.length ?? 0;
+    for (let i = 0; i < levels; i += 1) {
+      state = revealHint(fixture.caseData, state, 'obj-01');
+    }
+    state = revealAnswer(state, 'obj-01');
+    expect(canRevealAnswer(fixture.caseData, state, 'obj-01')).toBe(false);
+    expect(state.revealedAnswers).toEqual(['obj-01']);
+  });
+
+  it('達成済みの Objective には出ない', () => {
+    let state = initialProgress(0);
+    const levels = fixture.caseData.hints['obj-01']?.length ?? 0;
+    for (let i = 0; i < levels; i += 1) {
+      state = revealHint(fixture.caseData, state, 'obj-01');
+    }
+    state = { ...state, completedObjectives: ['obj-01'] };
+    expect(canRevealAnswer(fixture.caseData, state, 'obj-01')).toBe(false);
+  });
+
+  it('同じ Objective を二重に記録しない', () => {
+    const state = revealAnswer(revealAnswer(initialProgress(0), 'obj-01'), 'obj-01');
+    expect(state.revealedAnswers).toEqual(['obj-01']);
+  });
+
+  it('答えを見ても、その Objective が達成扱いにはならない', () => {
+    // 自分で実行して結果を見るところまで残す。読まずに次へ進ませない。
+    const state = revealAnswer(initialProgress(0), 'obj-01');
+    expect(state.completedObjectives).toEqual([]);
   });
 });

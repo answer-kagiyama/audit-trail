@@ -386,6 +386,24 @@ export function parseSolution(raw: unknown, story: StoryDoc): SolutionDoc {
     }
   }
 
+  // 答えの提示。全 Objective ぶん揃っていないと、そこだけ脱出弁が無い CASE になる。
+  const exampleRaw = requireRecord(root['exampleSql'], 'solution.json.exampleSql');
+  const exampleSql: SolutionDoc['exampleSql'] = {};
+  for (const objective of story.objectives) {
+    exampleSql[objective.id] = requireNonEmptyString(
+      exampleRaw[objective.id],
+      `solution.json.exampleSql.${objective.id}`,
+    );
+  }
+  for (const objectiveId of Object.keys(exampleRaw)) {
+    if (!story.objectives.some((objective) => objective.id === objectiveId)) {
+      throw new CaseDataError(
+        'solution.json.exampleSql',
+        `${objectiveId} に対応する Objective がありません`,
+      );
+    }
+  }
+
   const fields = requireArray(finalRaw['fields'], 'solution.json.finalAnswer.fields').map(
     (item, index) => {
       const path = `solution.json.finalAnswer.fields[${String(index)}]`;
@@ -412,6 +430,7 @@ export function parseSolution(raw: unknown, story: StoryDoc): SolutionDoc {
 
   return {
     checks,
+    exampleSql,
     finalAnswer: {
       fields,
       requireAll: requireBoolean(finalRaw['requireAll'], 'solution.json.finalAnswer.requireAll'),
