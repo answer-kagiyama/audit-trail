@@ -19,6 +19,8 @@ export interface ProgressState {
   storyBeats: string[];
   /** Objective ごとの、開示済みヒントの最大レベル。 */
   revealedHints: Record<string, number>;
+  /** 答えを見た Objective。ヒントと違い、見たら終わりなので真偽で持つ。 */
+  revealedAnswers: string[];
   /** 実行に成功したクエリの数。クリア時のプレイ記録に使う。 */
   queryCount: number;
   /** 最終回答の試行回数。 */
@@ -35,6 +37,7 @@ export function initialProgress(now: number): ProgressState {
     evidence: [],
     storyBeats: [],
     revealedHints: {},
+    revealedAnswers: [],
     queryCount: 0,
     finalAnswerAttempts: 0,
     startedAt: now,
@@ -158,6 +161,29 @@ export function revealedHintsFor(
 /** 開示済みヒントの総数。クリア時のプレイ記録に使う。 */
 export function totalHintsRevealed(state: ProgressState): number {
   return Object.values(state.revealedHints).reduce((total, level) => total + level, 0);
+}
+
+/**
+ * 答えを見せてよいか。
+ *
+ * **ヒントを全部開いたあとにだけ出す。** 最初から並んでいると、
+ * 考える前に押せてしまう。ヒントは考え方を示すものなので、
+ * そこを通り抜けてなお進めない人にだけ渡す最後の逃げ道にする。
+ */
+export function canRevealAnswer(
+  caseData: CaseData,
+  state: ProgressState,
+  objectiveId: string,
+): boolean {
+  if (state.completedObjectives.includes(objectiveId)) return false;
+  if (state.revealedAnswers.includes(objectiveId)) return false;
+  return nextHintLevel(caseData, state, objectiveId) === undefined;
+}
+
+/** 答えを見たことを記録する。罰は無いが、クリア記録には残る。 */
+export function revealAnswer(state: ProgressState, objectiveId: string): ProgressState {
+  if (state.revealedAnswers.includes(objectiveId)) return state;
+  return { ...state, revealedAnswers: [...state.revealedAnswers, objectiveId] };
 }
 
 export interface FinalAnswerOutcome {

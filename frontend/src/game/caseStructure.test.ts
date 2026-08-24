@@ -16,6 +16,7 @@
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
 import { allCaseIds, loadCase } from '../test/caseFixture.ts';
 import type { LoadedCase } from '../test/caseFixture.ts';
+import { evaluateChecks } from './checks.ts';
 import { computeBoxes, orthogonalPoints } from '../ui/DatabasePanel/ErDiagram/layout.ts';
 import { chooseSides, anchorOn } from '../ui/DatabasePanel/ErDiagram/layout.ts';
 
@@ -491,6 +492,38 @@ describe.each(allCaseIds())('%s', (caseId) => {
       const ids = new Set(c.story.objectives.map((objective) => objective.id));
       for (const id of Object.keys(c.hints)) {
         expect(ids, `ヒントの ${id} に対応する Objective がありません`).toContain(id);
+      }
+    });
+  });
+
+  /**
+   * 「答えを見る」で見せるSQL。
+   *
+   * ここが間違っていると、詰まった人に**動かない答えを渡す**ことになる。
+   * この機能で一番まずい壊れ方なので、実際に実行して判定を通ることを毎回確かめる。
+   */
+  describe('答えとして見せるSQL', () => {
+    it('すべての Objective に用意されている', () => {
+      for (const objective of c.story.objectives) {
+        expect(
+          c.solution.exampleSql[objective.id],
+          `${objective.id} の exampleSql がありません`,
+        ).toBeTruthy();
+      }
+    });
+
+    it('実行すると、その Objective の判定を実際に通る', () => {
+      for (const objective of c.story.objectives) {
+        const sql = c.solution.exampleSql[objective.id];
+        const checks = c.solution.checks[objective.id];
+        if (sql === undefined || checks === undefined) continue;
+
+        const outcome = evaluateChecks(checks, c.run(sql));
+        expect(
+          outcome.passed,
+          `${objective.id} の exampleSql が判定を通りません。\n` +
+            `  理由: ${outcome.reason ?? '(不明)'}\n  SQL: ${sql}`,
+        ).toBe(true);
       }
     });
   });

@@ -3,71 +3,143 @@
     "obj-01": [
       {
         "type": "containsRows",
-        "columns": ["id", "amount"],
-        "rows": [[4821, 1000000]],
-        "options": { "maxRows": 20 }
+        "columns": [
+          "id",
+          "amount"
+        ],
+        "rows": [
+          [
+            4821,
+            1000000
+          ]
+        ],
+        "options": {
+          "maxRows": 20
+        }
       }
     ],
-
     "obj-02": [
       {
         "type": "containsRows",
-        "columns": ["name", "amount"],
-        "rows": [["山田 咲", 1000000]],
-        "options": { "maxRows": 20 }
+        "columns": [
+          "name",
+          "amount"
+        ],
+        "rows": [
+          [
+            "山田 咲",
+            1000000
+          ]
+        ],
+        "options": {
+          "maxRows": 20
+        }
       }
     ],
-
     "obj-03": [
       {
         "type": "containsRows",
-        "columns": ["ip_address", "occurred_at", "result"],
-        "rows": [["10.0.4.112", "2026-03-14 02:09:20", "success"]],
-        "options": { "maxRows": 30 }
+        "columns": [
+          "ip_address",
+          "occurred_at",
+          "result"
+        ],
+        "rows": [
+          [
+            "10.0.4.112",
+            "2026-03-14 02:09:20",
+            "success"
+          ]
+        ],
+        "options": {
+          "maxRows": 30
+        }
       }
     ],
-
     "obj-04": [
       {
         "type": "containsRows",
-        "columns": ["direction", "occurred_at"],
-        "rows": [["out", "2026-03-13 19:42:18"]],
-        "options": { "maxRows": 60 }
+        "columns": [
+          "direction",
+          "occurred_at"
+        ],
+        "rows": [
+          [
+            "out",
+            "2026-03-13 19:42:18"
+          ]
+        ],
+        "options": {
+          "maxRows": 60
+        }
       }
     ],
-
     "obj-05": [
       {
         "type": "columnValues",
         "column": "name",
-        "values": ["田中 誠"],
-        "options": { "exact": true }
+        "values": [
+          "田中 誠"
+        ],
+        "options": {
+          "exact": true
+        }
       }
     ],
-
     "obj-06": [
       {
         "type": "containsRows",
-        "columns": ["name", "ip_address"],
-        "rows": [["田中 誠", "10.0.4.112"]],
-        "options": { "maxRows": 60 }
+        "columns": [
+          "name",
+          "ip_address"
+        ],
+        "rows": [
+          [
+            "田中 誠",
+            "10.0.4.112"
+          ]
+        ],
+        "options": {
+          "maxRows": 60
+        }
       }
     ],
-
     "obj-07": [
       {
         "type": "containsRows",
-        "columns": ["occurred_at", "result"],
-        "rows": [
-          ["2026-03-14 02:05:11", "failure"],
-          ["2026-03-14 02:06:02", "failure"],
-          ["2026-03-14 02:07:44", "failure"]
+        "columns": [
+          "occurred_at",
+          "result"
         ],
-        "options": { "maxRows": 30 }
+        "rows": [
+          [
+            "2026-03-14 02:05:11",
+            "failure"
+          ],
+          [
+            "2026-03-14 02:06:02",
+            "failure"
+          ],
+          [
+            "2026-03-14 02:07:44",
+            "failure"
+          ]
+        ],
+        "options": {
+          "maxRows": 30
+        }
       }
     ]
   },
-
+  "exampleSql": {
+    "obj-01": "SELECT id, occurred_at, amount, memo\nFROM transactions\nWHERE amount >= 1000000\nORDER BY occurred_at",
+    "obj-02": "SELECT e.name, t.id, t.amount, t.occurred_at\nFROM transactions t\nJOIN employees e ON e.id = t.employee_id\nWHERE t.id = 4821",
+    "obj-03": "SELECT *\nFROM login_logs\nWHERE occurred_at >= '2026-03-14 02:00:00'\n  AND occurred_at <  '2026-03-14 03:00:00'\nORDER BY occurred_at",
+    "obj-04": "SELECT *\nFROM access_logs\nWHERE employee_id = 7\nORDER BY occurred_at DESC",
+    "obj-05": "WITH last_move AS (\n  SELECT employee_id, direction,\n         ROW_NUMBER() OVER (PARTITION BY employee_id ORDER BY occurred_at DESC) AS rn\n  FROM access_logs\n  WHERE occurred_at <= '2026-03-14 02:14:33'\n)\nSELECT e.name\nFROM last_move l\nJOIN employees e ON e.id = l.employee_id\nWHERE l.rn = 1 AND l.direction = 'in'",
+    "obj-06": "SELECT e.name, l.ip_address, l.occurred_at\nFROM login_logs l\nJOIN employees e ON e.id = l.employee_id\nWHERE l.ip_address = '10.0.4.112'\nORDER BY l.occurred_at",
+    "obj-07": "SELECT *\nFROM login_logs\nWHERE employee_id = 7 AND result = 'failure'\nORDER BY occurred_at"
+  },
   "finalAnswer": {
     "fields": [
       {

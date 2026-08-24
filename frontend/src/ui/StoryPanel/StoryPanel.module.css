@@ -122,6 +122,31 @@
   border-color: var(--accent);
 }
 
+/* 答えを見る。ヒントより一段控えめにして、押す前に一拍おかせる。 */
+.answerButton {
+  appearance: none;
+  align-self: flex-start;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+}
+
+.answerButton:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  border-style: solid;
+}
+
+.answerShown {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: var(--leading-normal);
+}
+
 .hintsDone {
   font-size: var(--text-xs);
   color: var(--text-muted);

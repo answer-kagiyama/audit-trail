@@ -362,6 +362,32 @@ CASE 001 では、たとえば obj-04 の想定解が 50 行、`access_logs` 全
 
 ---
 
+### 5.5 exampleSql（答えとして見せるSQL）
+
+Objective ごとに、正解SQLの**一例**を1つ持つ。ヒントを使い切ってなお進めない
+プレイヤーに見せる、最後の逃げ道（[game-design.md §5](./game-design.md)）。
+
+```jsonc
+{
+  "checks": { /* ... */ },
+  "exampleSql": {
+    "obj-01": "SELECT id, occurred_at, amount, memo\nFROM transactions\nWHERE amount >= 1000000\nORDER BY occurred_at"
+  },
+  "finalAnswer": { /* ... */ }
+}
+```
+
+- **全 Objective ぶん必須。** 1つでも欠けると、そこだけ逃げ道の無い CASE になる
+- 改行を入れて、読んで学べる形に整える。1行に詰め込まない
+- あくまで一例。同じ結果に辿り着く書き方は他にもある
+
+⚠️ **ここに置いたSQLが実際に `checks` を通ることは、
+`caseStructure.test.ts` が全CASEで毎回実行して確かめる。**
+詰まった人に動かない答えを渡すのが、この機能で一番まずい壊れ方なので、
+目視ではなく実行で担保する。
+
+---
+
 ## 6. hints.json
 
 ```jsonc
@@ -434,6 +460,7 @@ E2E が守っているのは「実ブラウザでしか壊れないもの」—�
 - [ ] Objectiveの `prerequisites` がDAGになっている（循環がない）
 - [ ] 全Objectiveが `prerequisites` を辿って到達可能である（孤立していない）
 - [ ] **すべての `containsRows` に `maxRows` を指定した**（全件ダンプ対策）
+- [ ] **`exampleSql` を全Objectiveぶん用意した**（自動検証あり。実行して判定を通ることまで見る）
 - [ ] **各Objectiveについて、正解例SQLを2〜3通り書き、すべて達成判定されるテストがある**
 - [ ] **各Objectiveについて、不正解例SQLが達成判定されないテストがある**
       （全件ダンプ・別テーブル・惜しいが違う絞り込み、の3種は必ず入れる）

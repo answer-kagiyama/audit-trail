@@ -169,3 +169,41 @@ describe('localStorage が使えない環境', () => {
     expect(loadProgress(CASE_ID, VERSION).kind).toBe('empty');
   });
 });
+
+describe('古い形式のセーブとの互換', () => {
+  it('revealedAnswers が無いセーブも読める（機能追加で進捗を消さない）', () => {
+    // 「答えを見る」より前に保存されたデータ。表示にしか使わない項目なので、
+    // 欠けていても捨てず、「一度も見ていない」として読む。
+    const legacy = {
+      saveFormat: 1,
+      caseVersion: VERSION,
+      progress: {
+        completedObjectives: ['obj-01'],
+        evidence: ['ev-01'],
+        storyBeats: ['beat-01'],
+        revealedHints: { 'obj-02': 1 },
+        queryCount: 5,
+        finalAnswerAttempts: 0,
+        startedAt: 1_700_000_000_000,
+        clearedAt: null,
+      },
+    };
+    store.setItem(saveKey(CASE_ID), JSON.stringify(legacy));
+
+    const result = loadProgress(CASE_ID, VERSION);
+    expect(result.kind).toBe('loaded');
+    if (result.kind !== 'loaded') return;
+    expect(result.progress.completedObjectives).toEqual(['obj-01']);
+    expect(result.progress.revealedAnswers).toEqual([]);
+  });
+
+  it('revealedAnswers が壊れていれば、そのセーブは捨てる', () => {
+    const broken = {
+      saveFormat: 1,
+      caseVersion: VERSION,
+      progress: { ...sample(), revealedAnswers: [1, 2] },
+    };
+    store.setItem(saveKey(CASE_ID), JSON.stringify(broken));
+    expect(loadProgress(CASE_ID, VERSION).kind).toBe('discarded');
+  });
+});

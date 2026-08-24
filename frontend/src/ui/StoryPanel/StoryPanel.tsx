@@ -9,6 +9,7 @@ import type { ProgressState } from '../../game/progression.ts';
 import {
   activeObjectives,
   allObjectivesCompleted,
+  canRevealAnswer,
   nextHintLevel,
   revealedHintsFor,
 } from '../../game/progression.ts';
@@ -24,6 +25,8 @@ export interface StoryPanelProps {
   /** セーブが破棄されたときの案内。 */
   notice?: string | undefined;
   onRevealHint: (objectiveId: string) => void;
+  /** 答えを見る。SQLはエディタに差し込まれ、実行はプレイヤーがする。 */
+  onRevealAnswer: (objectiveId: string) => void;
   onOpenFinalAnswer: () => void;
   onReset: () => void;
 }
@@ -34,6 +37,7 @@ export function StoryPanel({
   justEarnedEvidence,
   notice,
   onRevealHint,
+  onRevealAnswer,
   onOpenFinalAnswer,
   onReset,
 }: StoryPanelProps) {
@@ -106,6 +110,26 @@ export function StoryPanel({
                     >
                       ヒントを見る（{next} / {caseData.hints[objective.id]?.length ?? 0}）
                     </button>
+                  )}
+
+                  {/* 最後の逃げ道。ヒントを全部開いたあとにだけ出す。
+                      考える前に押せる場所に置くと、ヒントの意味が無くなる。 */}
+                  {canRevealAnswer(caseData, progress, objective.id) && (
+                    <button
+                      type="button"
+                      className={styles.answerButton}
+                      onClick={() => {
+                        onRevealAnswer(objective.id);
+                      }}
+                    >
+                      答えを見る
+                    </button>
+                  )}
+
+                  {progress.revealedAnswers.includes(objective.id) && (
+                    <span className={styles.answerShown}>
+                      答えをエディタに入れました。実行して確かめてください。
+                    </span>
                   )}
                 </div>
               );

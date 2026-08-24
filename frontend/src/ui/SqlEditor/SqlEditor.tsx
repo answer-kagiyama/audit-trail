@@ -42,11 +42,6 @@ export function SqlEditor({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [renaming, setRenaming] = useState<string | null>(null);
 
-  // タブを切り替えたら、実行対象もそのタブの内容になる。
-  useEffect(() => {
-    sqlRef.current = tab.sql;
-  }, [tab.id, tab.sql]);
-
   /** 履歴を辿る位置。history.length は「履歴から抜けた（＝編集中）」状態。 */
   const cursorRef = useRef(history.length);
   const draftRef = useRef('');
@@ -86,6 +81,17 @@ export function SqlEditor({
     },
     onHistoryStep: stepHistory,
   });
+
+  // タブを切り替えたとき、および外から内容が差し替わったとき（答えの提示など）に
+  // エディタの表示を合わせる。利用者の入力で来た変更は sqlRef と一致するので何もしない。
+  useEffect(() => {
+    if (tab.sql === sqlRef.current) return;
+    sqlRef.current = tab.sql;
+    setValue(tab.sql);
+    // 差し込んだ直後に Ctrl+Enter で実行できるよう、焦点を戻す。
+    // このキーは CodeMirror に載っているので、ボタンに焦点が残っていると効かない。
+    focus();
+  }, [tab.id, tab.sql, setValue, focus]);
 
   const applyHistoryItem = (sql: string) => {
     setValue(sql);
