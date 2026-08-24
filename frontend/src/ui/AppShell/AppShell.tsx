@@ -25,6 +25,8 @@ export interface AppShellProps {
   onThemeChange: (next: ThemePreference) => void;
   onBackToIndex: () => void;
   onOpenHowToPlay: () => void;
+  /** Database を畳んでいるか。畳むとその高さが Editor と Result に回る。 */
+  databaseCollapsed: boolean;
 }
 
 /** tokens.css の --breakpoint-wide と揃えること。 */
@@ -40,6 +42,7 @@ export function AppShell({
   onThemeChange,
   onBackToIndex,
   onOpenHowToPlay,
+  databaseCollapsed,
 }: AppShellProps) {
   const isWide = useMediaQuery(WIDE_QUERY);
 
@@ -64,7 +67,7 @@ export function AppShell({
       {isWide ? (
         <div className={styles.wide}>
           {story}
-          <div className={styles.workbench}>
+          <div className={styles.workbench} data-database-collapsed={databaseCollapsed}>
             {database}
             {editor}
             {result}

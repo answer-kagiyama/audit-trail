@@ -4,7 +4,7 @@
  * 起動して最初に見る画面。ここで「何のゲームか」が伝わらないと、
  * SQL を書く前に離脱する。名前・タグライン・一行説明・遊び方への導線を置く。
  */
-import type { CaseSummary } from '../../game/caseIndex.ts';
+import type { CaseStatus, CaseSummary } from '../../game/caseIndex.ts';
 import { caseStatus } from '../../game/caseIndex.ts';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle.tsx';
 import type { ThemePreference } from '../ThemeToggle/theme.ts';
@@ -25,6 +25,10 @@ export function CaseIndexScreen({
   onOpenCase,
   onOpenHowToPlay,
 }: CaseIndexScreenProps) {
+  // 進捗は localStorage だけで決まる。カードごとに読み直さず、ここで1回引く。
+  const statuses = new Map(cases.map((summary) => [summary.id, caseStatus(summary)]));
+  const solved = [...statuses.values()].filter((status) => status.kind === 'solved').length;
+
   return (
     <div className={styles.screen}>
       <header className={styles.masthead}>
@@ -45,7 +49,14 @@ export function CaseIndexScreen({
       </div>
 
       <section className={styles.list}>
-        <h2 className={styles.listTitle}>事件簿</h2>
+        <div className={styles.listHead}>
+          <h2 className={styles.listTitle}>事件簿</h2>
+          {cases.length > 0 && (
+            <span className={styles.tally}>
+              {solved} / {cases.length} 解決
+            </span>
+          )}
+        </div>
 
         {cases.length === 0 ? (
           <p className={styles.empty}>まだ事件がありません。</p>
@@ -54,11 +65,19 @@ export function CaseIndexScreen({
             <CaseCard
               key={summary.id}
               summary={summary}
+              status={statuses.get(summary.id) ?? { kind: 'untouched' }}
               onOpen={() => {
                 onOpenCase(summary.id);
               }}
             />
           ))
+        )}
+
+        {/* 全部解いた人に、終わりを示す。事件が増えたらまた未解決に戻る。 */}
+        {cases.length > 0 && solved === cases.length && (
+          <p className={styles.allSolved}>
+            すべての事件を解決しました。次の記録が届くまで、しばらく待つことになります。
+          </p>
         )}
       </section>
 
@@ -70,8 +89,15 @@ export function CaseIndexScreen({
   );
 }
 
-function CaseCard({ summary, onOpen }: { summary: CaseSummary; onOpen: () => void }) {
-  const status = caseStatus(summary);
+function CaseCard({
+  summary,
+  status,
+  onOpen,
+}: {
+  summary: CaseSummary;
+  status: CaseStatus;
+  onOpen: () => void;
+}) {
   const [min, max] = summary.estimatedMinutes;
 
   return (
@@ -103,7 +129,7 @@ function CaseCard({ summary, onOpen }: { summary: CaseSummary; onOpen: () => voi
   );
 }
 
-function StatusBadge({ status, total }: { status: ReturnType<typeof caseStatus>; total: number }) {
+function StatusBadge({ status, total }: { status: CaseStatus; total: number }) {
   switch (status.kind) {
     case 'solved':
       return <span className={`${styles.badge} ${styles.badgeSolved}`}>解決済み</span>;
