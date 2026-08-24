@@ -170,7 +170,7 @@ CASE検証テスト47本（正解例30・不正解例22を含む）が緑。
 
 ## Definition of Done
 
-MVPの完了条件（引き継ぎ資料 §16 に対応）。
+MVPの完了条件（[handoff.md §16](./handoff.md#16-mvp-definition-of-done) に対応）。
 
 - [x] CASEを開始できる
 - [x] 事件ストーリーを読める
