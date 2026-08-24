@@ -6,7 +6,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { CaseDataError } from './game/caseLoader.ts';
-import { loadCaseIndex } from './game/caseIndex.ts';
+import { caseStatus, loadCaseIndex } from './game/caseIndex.ts';
 import type { CaseSummary } from './game/caseIndex.ts';
 import { BootScreen } from './ui/BootScreen/BootScreen.tsx';
 import { CaseIndexScreen } from './ui/CaseIndex/CaseIndexScreen.tsx';
@@ -95,6 +95,9 @@ export function App() {
       );
     }
 
+    // クリア画面から案内する次の事件。まだ解決していないものを、事件簿の並び順で。
+    const next = cases.find((item) => item.id !== summary.id && caseStatus(item).kind !== 'solved');
+
     return (
       <>
         <CaseSession
@@ -107,6 +110,10 @@ export function App() {
             navigate({ kind: 'index' });
           }}
           onOpenHowToPlay={() => setHowToPlayOpen(true)}
+          nextCase={next ? { id: next.id, title: next.title } : undefined}
+          onOpenCase={(caseId) => {
+            navigate({ kind: 'case', caseId });
+          }}
         />
         {howToPlay}
       </>

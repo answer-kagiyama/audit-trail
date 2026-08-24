@@ -32,6 +32,15 @@ import type { ClearedAnnouncement } from './ObjectiveCleared/ObjectiveCleared.ts
 import { ResultPanel } from './ResultTable/ResultTable.tsx';
 import type { ResultState } from './ResultTable/ResultTable.tsx';
 import { SqlEditor } from './SqlEditor/SqlEditor.tsx';
+import { useWorkspace } from './SqlEditor/useWorkspace.ts';
+import {
+  addTab,
+  closeTab,
+  pushHistory,
+  renameTab,
+  selectTab,
+  setSql,
+} from './SqlEditor/workspace.ts';
 import { StoryPanel } from './StoryPanel/StoryPanel.tsx';
 import type { ThemePreference } from './ThemeToggle/theme.ts';
 
@@ -74,6 +83,9 @@ export interface CaseSessionProps {
   onThemeChange: (next: ThemePreference) => void;
   onBackToIndex: () => void;
   onOpenHowToPlay: () => void;
+  /** クリア後に案内する次の事件。全部解決済みなら undefined。 */
+  nextCase?: { id: string; title: string } | undefined;
+  onOpenCase: (caseId: string) => void;
 }
 
 export function CaseSession({
@@ -82,6 +94,8 @@ export function CaseSession({
   onThemeChange,
   onBackToIndex,
   onOpenHowToPlay,
+  nextCase,
+  onOpenCase,
 }: CaseSessionProps) {
   const engineRef = useRef<SqlEngine | null>(null);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
@@ -89,7 +103,8 @@ export function CaseSession({
   const [progress, setProgress] = useState<ProgressState | null>(null);
   const [notice, setNotice] = useState<string | undefined>(undefined);
   const [result, setResult] = useState<ResultState>({ kind: 'idle' });
-  const [history, setHistory] = useState<string[]>([]);
+  // タブと実行履歴。進捗とは別のキーに保存する（useWorkspace の説明を参照）。
+  const { workspace, update: updateWorkspace, reset: resetWorkspace } = useWorkspace(caseId);
   const [justEarned, setJustEarned] = useState<readonly string[]>([]);
   const [finalOpen, setFinalOpen] = useState(false);
   const [cleared, setCleared] = useState<ClearedAnnouncement | null>(null);
@@ -142,9 +157,7 @@ export function CaseSession({
       try {
         const queryResult = await engine.execute(sql);
         setResult({ kind: 'result', result: queryResult });
-        setHistory((previous) =>
-          previous[previous.length - 1] === sql ? previous : [...previous, sql],
-        );
+        updateWorkspace((previous) => pushHistory(previous, sql));
 
         // 成功したクエリだけが進行に影響する。
         const outcome = applyQueryResult(loaded.caseData, progress, queryResult);
@@ -179,7 +192,7 @@ export function CaseSession({
         setResult({ kind: 'error', error: toFriendlyError(e, loaded.hints) });
       }
     },
-    [loaded, progress, commit],
+    [loaded, progress, commit, updateWorkspace],
   );
 
   const onReset = useCallback(() => {
@@ -187,12 +200,12 @@ export function CaseSession({
     if (!window.confirm('進捗をすべて消して最初からやり直しますか？')) return;
     clearProgress(caseId);
     setProgress(initialProgress(Date.now()));
-    setHistory([]);
+    resetWorkspace();
     setJustEarned([]);
     setNotice(undefined);
     setResult({ kind: 'idle' });
     setCleared(null);
-  }, [caseId, loaded]);
+  }, [caseId, loaded, resetWorkspace]);
 
   const onSubmitFinalAnswer = useCallback(
     (answers: Record<string, string>): boolean => {
@@ -231,9 +244,24 @@ export function CaseSession({
         database={<DatabasePanel schema={loaded.caseData.schema} />}
         editor={
           <SqlEditor
-            history={history}
+            workspace={workspace}
             disabled={result.kind === 'running'}
             onRun={(sql) => void run(sql)}
+            onChangeSql={(tabId, sql) => {
+              updateWorkspace((previous) => setSql(previous, tabId, sql));
+            }}
+            onSelectTab={(tabId) => {
+              updateWorkspace((previous) => selectTab(previous, tabId));
+            }}
+            onAddTab={() => {
+              updateWorkspace(addTab);
+            }}
+            onCloseTab={(tabId) => {
+              updateWorkspace((previous) => closeTab(previous, tabId));
+            }}
+            onRenameTab={(tabId, name) => {
+              updateWorkspace((previous) => renameTab(previous, tabId, name));
+            }}
           />
         }
         result={<ResultPanel state={result} />}
@@ -252,6 +280,9 @@ export function CaseSession({
         open={finalOpen}
         onOpenChange={setFinalOpen}
         onSubmit={onSubmitFinalAnswer}
+        nextCase={nextCase}
+        onOpenNextCase={onOpenCase}
+        onBackToIndex={onBackToIndex}
       />
     </>
   );
