@@ -73,6 +73,29 @@
   gap: var(--space-3);
 }
 
+.listHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* 全体の進み具合。事件が1本しかないうちは意味が薄いが、増えるほど効く。 */
+.tally {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.allSolved {
+  margin-top: var(--space-2);
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--accent);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+}
+
 .listTitle {
   font-size: var(--text-xs);
   letter-spacing: 0.16em;

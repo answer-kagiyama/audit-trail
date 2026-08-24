@@ -25,7 +25,15 @@ function cardinalityLabel(cardinality: Cardinality): string {
   }
 }
 
-export function DatabasePanel({ schema }: { schema: SchemaDoc }) {
+export function DatabasePanel({
+  schema,
+  collapsed,
+  onToggleCollapsed,
+}: {
+  schema: SchemaDoc;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+}) {
   const [view, setView] = useState<View>('er');
   const [selectedTable, setSelectedTable] = useState<string | undefined>(undefined);
   const [highlightedColumns, setHighlightedColumns] = useState<
@@ -33,7 +41,13 @@ export function DatabasePanel({ schema }: { schema: SchemaDoc }) {
   >([]);
 
   return (
-    <Panel title="Database" aside={`${String(schema.tables.length)} テーブル`} padded={false}>
+    <Panel
+      title="Database"
+      aside={`${String(schema.tables.length)} テーブル`}
+      collapsed={collapsed}
+      onToggleCollapsed={onToggleCollapsed}
+      padded={false}
+    >
       <Tabs.Root
         value={view}
         onValueChange={(value) => setView(value as View)}

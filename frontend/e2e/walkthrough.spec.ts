@@ -211,3 +211,55 @@ test('知らない CASE の URL を開くと事件簿に落ちる', async ({ pag
   await dismissHowToPlay(page);
   await expect(page.getByRole('heading', { name: 'WHERE' })).toBeVisible();
 });
+
+test('Database を畳むと、その高さが Editor と Result に回る', async ({ page }) => {
+  // 縦に狭いノートPCを想定。3つ並べるとどれも中途半端になるので、
+  // 使っていない面を畳んで逃がせることを確かめる。
+  await page.setViewportSize({ width: 1280, height: 620 });
+  await boot(page);
+
+  const heights = () =>
+    page.evaluate(() => {
+      const workbench = document.querySelector('[class*=workbench]');
+      const rows = Array.from(workbench?.children ?? []).map((el) =>
+        Math.round(el.getBoundingClientRect().height),
+      );
+      const editor = document.querySelector('.cm-editor');
+      return {
+        database: rows[0] ?? 0,
+        result: rows[2] ?? 0,
+        input: editor ? Math.round(editor.getBoundingClientRect().height) : 0,
+      };
+    });
+
+  const before = await heights();
+  await page.getByRole('button', { name: '畳む' }).click();
+  await expect(page.locator('svg[role="img"]')).toHaveCount(0);
+  const after = await heights();
+
+  expect(after.database).toBeLessThan(before.database);
+  expect(after.result).toBeGreaterThan(before.result);
+
+  // 畳んでも入力欄が縮まない（ここが縮むと畳む意味がない）。
+  expect(after.input).toBeGreaterThanOrEqual(before.input);
+
+  await page.getByRole('button', { name: '開く' }).click();
+  await expect(page.locator('svg[role="img"]')).toHaveCount(1);
+});
+
+test('エディタの入力欄が画面の高さに応じて広がる', async ({ page }) => {
+  // 以前は grid の行が auto かつ .surface が max-height 18rem だったため、
+  // どれだけ縦に広いモニターでも入力欄は 112px のままだった。
+  const inputHeight = () =>
+    page.evaluate(() => {
+      const editor = document.querySelector('.cm-editor');
+      return editor ? Math.round(editor.getBoundingClientRect().height) : 0;
+    });
+
+  await page.setViewportSize({ width: 1280, height: 620 });
+  await boot(page);
+  const short = await inputHeight();
+
+  await page.setViewportSize({ width: 1280, height: 1300 });
+  await expect.poll(inputHeight).toBeGreaterThan(short);
+});

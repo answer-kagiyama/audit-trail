@@ -34,6 +34,7 @@ import { ResultPanel } from './ResultTable/ResultTable.tsx';
 import type { ResultState } from './ResultTable/ResultTable.tsx';
 import { SqlEditor } from './SqlEditor/SqlEditor.tsx';
 import { useWorkspace } from './SqlEditor/useWorkspace.ts';
+import { useLayoutPreference } from './hooks/useLayoutPreference.ts';
 import {
   activeTab,
   addTab,
@@ -107,6 +108,7 @@ export function CaseSession({
   const [result, setResult] = useState<ResultState>({ kind: 'idle' });
   // タブと実行履歴。進捗とは別のキーに保存する（useWorkspace の説明を参照）。
   const { workspace, update: updateWorkspace, reset: resetWorkspace } = useWorkspace(caseId);
+  const { databaseCollapsed, toggleDatabase } = useLayoutPreference();
   const [justEarned, setJustEarned] = useState<readonly string[]>([]);
   const [finalOpen, setFinalOpen] = useState(false);
   const [cleared, setCleared] = useState<ClearedAnnouncement | null>(null);
@@ -249,6 +251,7 @@ export function CaseSession({
         onThemeChange={onThemeChange}
         onBackToIndex={onBackToIndex}
         onOpenHowToPlay={onOpenHowToPlay}
+        databaseCollapsed={databaseCollapsed}
         story={
           <StoryPanel
             caseData={loaded.caseData}
@@ -263,7 +266,13 @@ export function CaseSession({
             onReset={onReset}
           />
         }
-        database={<DatabasePanel schema={loaded.caseData.schema} />}
+        database={
+          <DatabasePanel
+            schema={loaded.caseData.schema}
+            collapsed={databaseCollapsed}
+            onToggleCollapsed={toggleDatabase}
+          />
+        }
         editor={
           <SqlEditor
             workspace={workspace}

@@ -83,12 +83,27 @@
 }
 
 /* 右カラム: Database / Editor / Result を縦に積む。
-   Database と Result が伸縮し、Editor は内容なりの高さを保つ。 */
+ *
+ * 3つとも画面の高さに応じて伸びる。以前は Editor だけ auto にしていたため、
+ * どれだけ縦に広いモニターでも入力欄は 112px（約5行）のままだった。
+ * WQHD では Database が 614px を占める一方で Editor は 16% しか無く、
+ * 8行あるクエリを書いている最中に全体が見えない状態になっていた。
+ *
+ * 取り分は「見る頻度」で決める。Database はたまに参照するもの、
+ * Editor と Result は1回の試行ごとに必ず使うもの。
+ * だから Database を最小にし、Result をいちばん大きくしている。
+ */
 .workbench {
   display: grid;
-  grid-template-rows: minmax(0, 1.6fr) auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(13rem, 0.9fr) minmax(0, 1.1fr);
   gap: var(--space-3);
   min-height: 0;
+}
+
+/* Database を畳んだら見出しだけにして、空いた分を Editor と Result に回す。
+   縦に狭い画面（13インチのノートなど）では、3つ並べるとどれも中途半端になる。 */
+.workbench[data-database-collapsed='true'] {
+  grid-template-rows: auto minmax(13rem, 1fr) minmax(0, 1.2fr);
 }
 
 /* --- モバイル: タブ ------------------------------------------------------ */
@@ -142,10 +157,11 @@
   padding: var(--space-3);
 }
 
-/* SQLタブはエディタと結果を縦に積む。 */
+/* SQLタブはエディタと結果を縦に積む。モバイルのタブ内。ここも Editor に伸びる余地を与える
+   （縦に長い端末で入力欄だけ小さいままにならないように）。 */
 .sqlPanel {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: minmax(13rem, 0.9fr) minmax(0, 1.1fr);
   gap: var(--space-3);
   flex: 1;
   min-height: 0;

@@ -100,9 +100,12 @@
   color: var(--accent);
 }
 
+/* 与えられた高さいっぱいまで入力欄を伸ばす。
+   以前は 7rem〜18rem に固定していたので、画面が広くても増えなかった。
+   下限は親のグリッド行（.workbench）が持つ。 */
 .surface {
-  min-height: 7rem;
-  max-height: 18rem;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
   background: var(--surface-sunken);
 }
