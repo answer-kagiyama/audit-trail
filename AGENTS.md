@@ -22,7 +22,7 @@ SQLは学習対象ではなく**捜査の道具**。詳細は [docs/vision.md](.
 | [docs/vision.md](./docs/vision.md) | 目的とMVPスコープ |
 | [docs/game-design.md](./docs/game-design.md) | ゲームループ・進行モデル・UX |
 | [docs/architecture.md](./docs/architecture.md) | 技術構成と**レイヤ境界** |
-| [docs/case-format.md](./docs/case-format.md) | CASEデータ仕様 |
+| [docs/case-format.md](./docs/case-format.md) | CASEデータ仕様、CASE追加時の手順 |
 | [docs/adr/](./docs/adr/) | 技術方針の決定記録 |
 | [docs/roadmap.md](./docs/roadmap.md) | フェーズと完了条件 |
 | [docs/mvp-issues.md](./docs/mvp-issues.md) | 実装タスク一覧 |

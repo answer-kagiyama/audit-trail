@@ -12,6 +12,94 @@
   border-color: var(--border-strong);
 }
 
+/* --- タブ ------------------------------------------------------------------ */
+.tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: var(--space-1) var(--space-1) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+  /* タブが増えたら横に流す。モバイル幅でも折り返して崩れない。 */
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: transparent;
+}
+
+.tabActive {
+  border-color: var(--border-subtle);
+  background: var(--surface-panel);
+}
+
+.tabButton {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabActive .tabButton {
+  color: var(--accent);
+}
+
+.tabInput {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--surface-base);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  padding: 0 var(--space-1);
+  margin: var(--space-1);
+  width: 8rem;
+}
+
+.tabClose {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 1;
+  padding: var(--space-1);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.tabClose:hover {
+  color: var(--danger);
+  background: var(--surface-base);
+}
+
+.tabAdd {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.tabAdd:hover {
+  color: var(--accent);
+}
+
 .surface {
   min-height: 7rem;
   max-height: 18rem;

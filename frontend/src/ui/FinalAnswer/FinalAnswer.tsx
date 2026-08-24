@@ -23,6 +23,10 @@ export interface FinalAnswerDialogProps {
   onOpenChange: (open: boolean) => void;
   /** 正解なら true を返す。 */
   onSubmit: (answers: Record<string, string>) => boolean;
+  /** クリア後に案内する次の事件。全部解決済みなら undefined。 */
+  nextCase?: { id: string; title: string } | undefined;
+  onOpenNextCase: (caseId: string) => void;
+  onBackToIndex: () => void;
 }
 
 export function FinalAnswerDialog({
@@ -31,6 +35,9 @@ export function FinalAnswerDialog({
   open,
   onOpenChange,
   onSubmit,
+  nextCase,
+  onOpenNextCase,
+  onBackToIndex,
 }: FinalAnswerDialogProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [rejected, setRejected] = useState(false);
@@ -53,7 +60,12 @@ export function FinalAnswerDialog({
             <ClearedView
               caseData={caseData}
               progress={progress}
-              onClose={() => onOpenChange(false)}
+              nextCase={nextCase}
+              onClose={() => {
+                onOpenChange(false);
+              }}
+              onOpenNextCase={onOpenNextCase}
+              onBackToIndex={onBackToIndex}
             />
           ) : (
             <>
@@ -121,11 +133,17 @@ export function FinalAnswerDialog({
 function ClearedView({
   caseData,
   progress,
+  nextCase,
   onClose,
+  onOpenNextCase,
+  onBackToIndex,
 }: {
   caseData: CaseData;
   progress: ProgressState;
+  nextCase?: { id: string; title: string } | undefined;
   onClose: () => void;
+  onOpenNextCase: (caseId: string) => void;
+  onBackToIndex: () => void;
 }) {
   const minutes = Math.max(
     1,
@@ -160,10 +178,26 @@ function ClearedView({
         </div>
       </div>
 
+      {/* 読み終えた瞬間が一番テンションが高い。ここで行き止まりにしない。 */}
       <div className={styles.actions}>
-        <button type="button" className={styles.submit} onClick={onClose}>
+        <button type="button" className={styles.secondary} onClick={onClose}>
           閉じる
         </button>
+        {nextCase ? (
+          <button
+            type="button"
+            className={styles.submit}
+            onClick={() => {
+              onOpenNextCase(nextCase.id);
+            }}
+          >
+            次の事件へ — {nextCase.title}
+          </button>
+        ) : (
+          <button type="button" className={styles.submit} onClick={onBackToIndex}>
+            事件簿へ戻る
+          </button>
+        )}
       </div>
     </div>
   );

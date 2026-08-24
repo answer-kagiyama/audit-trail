@@ -100,6 +100,23 @@
   cursor: not-allowed;
 }
 
+/* クリア画面の「閉じる」。主役は「次の事件へ」なので、こちらは控えめにする。 */
+.secondary {
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+}
+
+.secondary:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 .cancel {
   appearance: none;
   border: 1px solid var(--border-strong);
