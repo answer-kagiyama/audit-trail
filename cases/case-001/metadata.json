@@ -5,8 +5,8 @@
   "subtitle": "深夜の不正送金事件",
   "difficulty": 1,
   "estimatedMinutes": [
-    30,
-    60
+    20,
+    40
   ],
   "sqlConcepts": [
     "SELECT",

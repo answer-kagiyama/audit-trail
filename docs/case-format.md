@@ -40,7 +40,7 @@ CIで再生成し、コミット済みの `database.sqlite` と一致しなけ�
   "title": "消えた100万円",
   "subtitle": "深夜の不正送金事件",
   "difficulty": 1,                 // 1..5
-  "estimatedMinutes": [30, 60],
+  "estimatedMinutes": [20, 40],
   "sqlConcepts": ["SELECT", "WHERE", "ORDER BY", "JOIN", "GROUP BY", "サブクエリ"],
   "dialect": "sqlite",             // 将来 "postgres" を取りうる
   "files": {
@@ -55,6 +55,19 @@ CIで再生成し、コミット済みの `database.sqlite` と一致しなけ�
 
 `version` を上げると既存セーブは破棄される（[game-design.md §6](./game-design.md#6-セーブとリセット)）。
 CASEデータを変更したのにversionを据え置くと、**古いセーブで詰む**プレイヤーが出る。
+
+**逆に、上げすぎてもいけない。** version を上げるたびに、全プレイヤーの進捗が消える。
+
+| 変更 | version を上げるか |
+|---|---|
+| `seed.sql` / `database.sqlite` / `schema.json` | **上げる**（結果が変わり、達成済みの判定が成立しなくなりうる） |
+| `solution.json` の判定条件 | **上げる** |
+| `story.json` の Objective の追加・削除・`prerequisites` | **上げる**（進行の形が変わる） |
+| `story.json` / `hints.json` の**文言だけ**の修正 | 上げない |
+| `estimatedMinutes` / `subtitle` / `sqlConcepts` | 上げない（事件簿の表示にしか使わない） |
+
+判断の基準は「**その変更で、保存済みの進捗が意味を失うか**」。
+失わないなら、進捗を消してまで上げる理由はない。
 
 ---
 
@@ -383,7 +396,15 @@ CASE 001 では、たとえば obj-04 の想定解が 50 行、`access_logs` 全
 
 ## 8. CASE追加時のチェックリスト
 
-新しいCASEを追加する（またはCASE 001を変更する）ときは、以下をすべて満たすこと。
+新しいCASEを追加する（または既存CASEを変更する）ときは、以下をすべて満たすこと。
+
+> **`cases/` にディレクトリを置いた時点で自動的に掛かるもの**（登録作業は不要）:
+> `cases:check`（seed.sql と database.sqlite の一致）と
+> `caseStructure.test.ts`（schema.json と実DBの一致・FKとER図・DAGの循環・
+> ヒント網羅・DBサイズ）。どちらも `cases/` の中身を正として全CASEに回る。
+>
+> **CASEごとに手で書く必要があるもの**: 正解例・不正解例の検証テスト
+> （`case-001.test.ts` に相当するファイル）。事件の中身に依存するため自動化できない。
 
 - [ ] `seed.sql` を書き、`build-case-db.mjs` で `database.sqlite` を生成した
 - [ ] `metadata.json` の `version` を上げた（既存CASEの変更時）
