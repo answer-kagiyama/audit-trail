@@ -1,0 +1,18 @@
+Copyright (c) 2026 The copyright holder(s) of this repository.
+
+All rights reserved.
+
+This repository is published for reference and case-study purposes only.
+No license is granted to use, copy, modify, merge, publish, distribute,
+sublicense, or sell copies of this software or its associated
+documentation, in whole or in part, without prior written permission
+from the copyright holder(s).
+
+このリポジトリは、社内での生成AI開発事例の共有を目的として公開しています。
+閲覧は自由ですが、コード・ドキュメント・アセットの利用・複製・改変・再配布には
+著作権者による事前の許諾が必要です。オープンソースライセンスは付与していません。
+
+---
+
+補足：ライセンス方針は未確定です。オープンソース化する場合は、上記の記述を
+MIT・Apache-2.0 等の正式なライセンス文へ差し替えてください。
