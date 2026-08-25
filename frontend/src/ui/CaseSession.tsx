@@ -112,6 +112,19 @@ export function CaseSession({
   const [justEarned, setJustEarned] = useState<readonly string[]>([]);
   const [finalOpen, setFinalOpen] = useState(false);
   const [cleared, setCleared] = useState<ClearedAnnouncement | null>(null);
+  const resultRef = useRef<HTMLElement | null>(null);
+
+  /*
+   * 実行したら結果を画面内に入れる。
+   *
+   * 縦に狭い画面では右カラムがスクロールする（AppShell.module.css）。
+   * Database を見上げたまま実行すると結果が画面外に出るので、そこだけ戻す。
+   * `block: 'nearest'` なので、すでに見えているときは何も起きない。
+   */
+  useEffect(() => {
+    if (result.kind !== 'result' && result.kind !== 'error') return;
+    resultRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [result]);
 
   useEffect(() => {
     const engine = new WorkerSqlEngine(browserWorkerFactory);
@@ -295,7 +308,7 @@ export function CaseSession({
             }}
           />
         }
-        result={<ResultPanel state={result} />}
+        result={<ResultPanel state={result} panelRef={resultRef} />}
       />
 
       <ObjectiveCleared

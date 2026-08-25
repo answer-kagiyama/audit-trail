@@ -3,8 +3,14 @@
  *
  * ER図で箱をクリックすると詳細タブに切り替えて該当テーブルを開く。
  * 「構造を見る → 中身を見る」という自然な流れを作るため。
+ *
+ * 常設のパネルは**全体の当たりを付けるサムネイル**で、図を読むのは「拡大」の役目。
+ * 縦をどう配分しても、13インチのノートでは ER図が読める大きさにならないため
+ * （docs/ui-layout.md §2.3 / §5.4）。打鍵中に要るのは列名なので、
+ * そちらはテーブル詳細タブが小窓のまま受け持つ。
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { Dialog } from '@base-ui/react/dialog';
 import { Tabs } from '@base-ui/react/tabs';
 import type { Cardinality, SchemaDoc } from '../../game/caseTypes.ts';
 import { Panel } from '../Panel/Panel.tsx';
@@ -34,44 +40,102 @@ export function DatabasePanel({
   collapsed: boolean;
   onToggleCollapsed: () => void;
 }) {
+  // タブと選択中のテーブルは小窓と拡大で共有する。
+  // 拡大して調べたテーブルが、閉じた瞬間に選び直しになるのは無駄な手間。
   const [view, setView] = useState<View>('er');
   const [selectedTable, setSelectedTable] = useState<string | undefined>(undefined);
+  const [expanded, setExpanded] = useState(false);
+  const popupRef = useRef<HTMLDivElement | null>(null);
+
+  const body = (
+    <DatabaseTabs
+      schema={schema}
+      view={view}
+      onChangeView={setView}
+      selectedTable={selectedTable}
+      onSelectTable={setSelectedTable}
+    />
+  );
+
+  return (
+    <>
+      <Panel
+        title="Database"
+        aside={`${String(schema.tables.length)} テーブル`}
+        collapsed={collapsed}
+        onToggleCollapsed={onToggleCollapsed}
+        onExpand={() => {
+          setExpanded(true);
+        }}
+        padded={false}
+      >
+        {body}
+      </Panel>
+
+      <Dialog.Root open={expanded} onOpenChange={setExpanded}>
+        <Dialog.Portal>
+          <Dialog.Backdrop className={styles.backdrop} />
+          <Dialog.Popup ref={popupRef} className={styles.popup} initialFocus={popupRef}>
+            <div className={styles.popupHead}>
+              <Dialog.Title className={styles.popupTitle}>Database</Dialog.Title>
+              <Dialog.Close className={styles.popupClose}>閉じる</Dialog.Close>
+            </div>
+            {/* 拡大側は別インスタンス。パン/ズームの位置は小窓と独立してよい。 */}
+            <div className={styles.popupBody}>{body}</div>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </>
+  );
+}
+
+function DatabaseTabs({
+  schema,
+  view,
+  onChangeView,
+  selectedTable,
+  onSelectTable,
+}: {
+  schema: SchemaDoc;
+  view: View;
+  onChangeView: (next: View) => void;
+  selectedTable: string | undefined;
+  onSelectTable: (table: string) => void;
+}) {
+  // ホバー中のリレーションはその場限りの表示なので、小窓と拡大で共有しない。
   const [highlightedColumns, setHighlightedColumns] = useState<
     readonly { table: string; column: string }[]
   >([]);
 
   return (
-    <Panel
-      title="Database"
-      aside={`${String(schema.tables.length)} テーブル`}
-      collapsed={collapsed}
-      onToggleCollapsed={onToggleCollapsed}
-      padded={false}
+    <Tabs.Root
+      value={view}
+      onValueChange={(value) => {
+        onChangeView(value as View);
+      }}
+      className={styles.root}
     >
-      <Tabs.Root
-        value={view}
-        onValueChange={(value) => setView(value as View)}
-        className={styles.root}
-      >
-        <Tabs.List className={styles.tabList}>
-          <Tabs.Tab value="er" className={styles.tab}>
-            ER図
-          </Tabs.Tab>
-          <Tabs.Tab value="detail" className={styles.tab}>
-            テーブル詳細
-          </Tabs.Tab>
-        </Tabs.List>
+      <Tabs.List className={styles.tabList}>
+        <Tabs.Tab value="er" className={styles.tab}>
+          ER図
+        </Tabs.Tab>
+        <Tabs.Tab value="detail" className={styles.tab}>
+          テーブル詳細
+        </Tabs.Tab>
+      </Tabs.List>
 
-        <Tabs.Panel value="er" className={styles.erPanel}>
-          <ErDiagram
-            schema={schema}
-            selectedTable={selectedTable}
-            onSelectTable={(table) => {
-              setSelectedTable(table);
-              setView('detail');
-            }}
-            onHoverRelation={setHighlightedColumns}
-          />
+      <Tabs.Panel value="er" className={styles.erPanel}>
+        <ErDiagram
+          schema={schema}
+          selectedTable={selectedTable}
+          onSelectTable={(table) => {
+            onSelectTable(table);
+            onChangeView('detail');
+          }}
+          onHoverRelation={setHighlightedColumns}
+        />
+
+        <div className={styles.erFooter}>
           <div className={styles.legend}>
             <span className={styles.legendItem}>PK = 主キー</span>
             <span className={styles.legendItem}>FK = 外部キー</span>
@@ -102,16 +166,16 @@ export function DatabasePanel({
               ))}
             </ul>
           </details>
-        </Tabs.Panel>
+        </div>
+      </Tabs.Panel>
 
-        <Tabs.Panel value="detail" className={styles.panel}>
-          <TableDetail
-            schema={schema}
-            selectedTable={selectedTable}
-            highlightedColumns={highlightedColumns}
-          />
-        </Tabs.Panel>
-      </Tabs.Root>
-    </Panel>
+      <Tabs.Panel value="detail" className={styles.panel}>
+        <TableDetail
+          schema={schema}
+          selectedTable={selectedTable}
+          highlightedColumns={highlightedColumns}
+        />
+      </Tabs.Panel>
+    </Tabs.Root>
   );
 }

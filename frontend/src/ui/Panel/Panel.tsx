@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import styles from './Panel.module.css';
 
 interface PanelProps {
@@ -11,9 +11,16 @@ interface PanelProps {
    */
   collapsed?: boolean;
   onToggleCollapsed?: () => void;
+  /**
+   * 別画面で大きく開く。渡すと見出しに「拡大」が出る。
+   * 縦の取り合いでは足りない面（ER図）のための逃げ道。
+   */
+  onExpand?: (() => void) | undefined;
   /** 本文に余白を付けるか。表やエディタは自前で持つので false。 */
   padded?: boolean;
   className?: string;
+  /** 面そのものへの参照。画面内に入っているかを外から測るために使う。 */
+  panelRef?: Ref<HTMLElement> | undefined;
   children: ReactNode;
 }
 
@@ -23,15 +30,22 @@ export function Panel({
   aside,
   collapsed = false,
   onToggleCollapsed,
+  onExpand,
   padded = true,
   className,
+  panelRef,
   children,
 }: PanelProps) {
   return (
-    <section className={[styles.panel, className].filter(Boolean).join(' ')}>
+    <section ref={panelRef} className={[styles.panel, className].filter(Boolean).join(' ')}>
       <header className={styles.header}>
         <h2 className={styles.title}>{title}</h2>
         {aside !== undefined && <div className={styles.aside}>{aside}</div>}
+        {onExpand !== undefined && (
+          <button type="button" className={styles.collapse} onClick={onExpand}>
+            拡大
+          </button>
+        )}
         {onToggleCollapsed !== undefined && (
           <button
             type="button"

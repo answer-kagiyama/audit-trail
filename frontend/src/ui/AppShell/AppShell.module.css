@@ -84,26 +84,38 @@
 
 /* 右カラム: Database / Editor / Result を縦に積む。
  *
- * 3つとも画面の高さに応じて伸びる。以前は Editor だけ auto にしていたため、
- * どれだけ縦に広いモニターでも入力欄は 112px（約5行）のままだった。
- * WQHD では Database が 614px を占める一方で Editor は 16% しか無く、
- * 8行あるクエリを書いている最中に全体が見えない状態になっていた。
+ * 設計と実測の根拠は docs/ui-layout.md。要点は3つ。
  *
- * 取り分は「見る頻度」で決める。Database はたまに参照するもの、
- * Editor と Result は1回の試行ごとに必ず使うもの。
- * だから Database を最小にし、Result をいちばん大きくしている。
+ * 1. **各面に下限を置く。** 3面で高さを分け合うと、13インチ（3面で 539px）では
+ *    どれも中途半端になる。以前は入力欄が 112px（4.4行）しかなかった。
+ * 2. **下限の合計に足りなければ流す。** 1画面に収めることを優先すると、
+ *    必ずどこかが潰れる。収まる画面（FHD 以上）では流れない。
+ * 3. **Editor と Result の下限の和は 539px を超えない**（16rem + 隙間 + 14rem
+ *    = 492px）。この2つは1回の試行で必ず両方使うので、13インチで Database を
+ *    通り過ぎたあとは**必ず同時に見える**必要がある。ここが破れると、
+ *    実行ボタンを押したら結果が画面外、という事故になる。
+ *
+ * 伸びしろ（fr）は Result > Editor > Database の順。Database はたまに参照する面で、
+ * 読むための大きさは「拡大」が受け持つ（DatabasePanel.tsx）。
  */
 .workbench {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) minmax(13rem, 0.9fr) minmax(0, 1.1fr);
-  gap: var(--space-3);
+  grid-template-rows: minmax(14rem, 0.8fr) minmax(16rem, 1fr) minmax(14rem, 1.2fr);
+  /* 隙間だけ 1段詰める。Database を畳んだとき（下）に 13インチで
+     スクロールを消しきるのに、ちょうどこの 8px が要る。 */
+  gap: var(--space-2);
   min-height: 0;
+  overflow-y: auto;
 }
 
 /* Database を畳んだら見出しだけにして、空いた分を Editor と Result に回す。
-   縦に狭い画面（13インチのノートなど）では、3つ並べるとどれも中途半端になる。 */
+ *
+ * **下限は畳んでも下げない。**ここを下げると、畳んだ瞬間に入力欄が縮むという
+ * 逆さまなことが起きる（畳む意味が無くなる）。見出しだけの 41px と合わせて
+ * 41 + 256 + 224 + 隙間 16 = 537px ≤ 539px なので、13インチでもスクロールが消える。
+ */
 .workbench[data-database-collapsed='true'] {
-  grid-template-rows: auto minmax(13rem, 1fr) minmax(0, 1.2fr);
+  grid-template-rows: auto minmax(16rem, 1fr) minmax(14rem, 1.2fr);
 }
 
 /* --- モバイル: タブ ------------------------------------------------------ */

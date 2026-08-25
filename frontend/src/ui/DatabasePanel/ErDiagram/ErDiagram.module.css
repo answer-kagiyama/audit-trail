@@ -1,7 +1,19 @@
+/*
+ * 枠は親（.erPanel）の残りを使う。
+ *
+ * 以前は `height: 100%; min-height: 20rem` だった。親は高さが auto の
+ * flex コンテナなので `height: 100%` が解決できず、min-height だけが効いて
+ * **枠が親の高さに関係なく常に 318px** になっていた。結果、Database パネルから
+ * はみ出し、1280x620 では図の 17% しか見えず、凡例と代替テキストは
+ * デスクトップのどの画面幅でも一度も表示されていなかった。
+ *
+ * 図を読める大きさで出すのは「拡大」の役目で、ここは全体の当たりを付ける
+ * サムネイル。だから下限は小さくてよい（docs/ui-layout.md §5.2）。
+ */
 .wrap {
   position: relative;
-  height: 100%;
-  min-height: 20rem;
+  flex: 1;
+  min-height: 6rem;
   background: var(--surface-sunken);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
