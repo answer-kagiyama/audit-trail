@@ -49,6 +49,7 @@ Claude が設計資料を書き、Phase ごとに実装 → テスト → レビ
 |---|---|
 | [docs/vision.md](./docs/vision.md) | プロダクトの目的、ターゲット、MVPスコープ |
 | [docs/game-design.md](./docs/game-design.md) | ゲームループ、進行モデル、UX |
+| [docs/ui-layout.md](./docs/ui-layout.md) | 調査画面のレイアウト設計（実測値と根拠） |
 | [docs/architecture.md](./docs/architecture.md) | 技術構成、レイヤ境界、テスト戦略 |
 | [docs/case-format.md](./docs/case-format.md) | CASEデータ仕様（JSON構造・判定ルール） |
 | [docs/roadmap.md](./docs/roadmap.md) | Phase 0〜6 と Definition of Done |
