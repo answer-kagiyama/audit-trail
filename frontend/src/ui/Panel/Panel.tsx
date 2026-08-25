@@ -6,11 +6,11 @@ interface PanelProps {
   /** 見出し右端の補助情報（行数、件数など）。 */
   aside?: ReactNode;
   /**
-   * 折りたたみ。畳むと本文を描かず、見出しだけになる。
-   * 縦に狭い画面で、使っていない面に場所を取られないようにするためのもの。
+   * 畳む。渡すと見出しに「畳む」が出る。
+   * 畳むのは**カラムごと**で、開き直すのは AppShell が出すレールの役目
+   * （docs/ui-layout.md §5）。だからここは「畳む」しか持たない。
    */
-  collapsed?: boolean;
-  onToggleCollapsed?: () => void;
+  onCollapse?: (() => void) | undefined;
   /**
    * 別画面で大きく開く。渡すと見出しに「拡大」が出る。
    * 縦の取り合いでは足りない面（ER図）のための逃げ道。
@@ -28,8 +28,7 @@ interface PanelProps {
 export function Panel({
   title,
   aside,
-  collapsed = false,
-  onToggleCollapsed,
+  onCollapse,
   onExpand,
   padded = true,
   className,
@@ -46,23 +45,15 @@ export function Panel({
             拡大
           </button>
         )}
-        {onToggleCollapsed !== undefined && (
-          <button
-            type="button"
-            className={styles.collapse}
-            aria-expanded={!collapsed}
-            onClick={onToggleCollapsed}
-          >
-            {collapsed ? '開く' : '畳む'}
+        {onCollapse !== undefined && (
+          <button type="button" className={styles.collapse} onClick={onCollapse}>
+            畳む
           </button>
         )}
       </header>
-      {/* 畳んだときは中身を描かない。DOM に残すと ER図の再レイアウトが走り続ける。 */}
-      {!collapsed && (
-        <div className={[styles.body, padded ? styles.padded : ''].filter(Boolean).join(' ')}>
-          {children}
-        </div>
-      )}
+      <div className={[styles.body, padded ? styles.padded : ''].filter(Boolean).join(' ')}>
+        {children}
+      </div>
     </section>
   );
 }

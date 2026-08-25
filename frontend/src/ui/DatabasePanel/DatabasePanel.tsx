@@ -4,10 +4,9 @@
  * ER図で箱をクリックすると詳細タブに切り替えて該当テーブルを開く。
  * 「構造を見る → 中身を見る」という自然な流れを作るため。
  *
- * 常設のパネルは**全体の当たりを付けるサムネイル**で、図を読むのは「拡大」の役目。
- * 縦をどう配分しても、13インチのノートでは ER図が読める大きさにならないため
- * （docs/ui-layout.md §2.3 / §5.4）。打鍵中に要るのは列名なので、
- * そちらはテーブル詳細タブが小窓のまま受け持つ。
+ * このパネルは**独立したカラム**を持ち、幅はプレイヤーが掴み手で決める
+ * （docs/ui-layout.md §5）。カラム幅 880px で ER図が等倍になる。
+ * 「拡大」は、狭い画面やもっと大きく見たいときのためにそのまま残してある。
  */
 import { useRef, useState } from 'react';
 import { Dialog } from '@base-ui/react/dialog';
@@ -33,12 +32,10 @@ function cardinalityLabel(cardinality: Cardinality): string {
 
 export function DatabasePanel({
   schema,
-  collapsed,
-  onToggleCollapsed,
+  onCollapse,
 }: {
   schema: SchemaDoc;
-  collapsed: boolean;
-  onToggleCollapsed: () => void;
+  onCollapse: () => void;
 }) {
   // タブと選択中のテーブルは小窓と拡大で共有する。
   // 拡大して調べたテーブルが、閉じた瞬間に選び直しになるのは無駄な手間。
@@ -62,8 +59,7 @@ export function DatabasePanel({
       <Panel
         title="Database"
         aside={`${String(schema.tables.length)} テーブル`}
-        collapsed={collapsed}
-        onToggleCollapsed={onToggleCollapsed}
+        onCollapse={onCollapse}
         onExpand={() => {
           setExpanded(true);
         }}

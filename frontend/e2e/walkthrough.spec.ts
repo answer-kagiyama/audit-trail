@@ -212,39 +212,119 @@ test('知らない CASE の URL を開くと事件簿に落ちる', async ({ pag
   await expect(page.getByRole('heading', { name: 'WHERE' })).toBeVisible();
 });
 
-test('Database を畳むと、その高さが Editor と Result に回る', async ({ page }) => {
-  // 縦に狭いノートPCを想定。3つ並べるとどれも中途半端になるので、
-  // 使っていない面を畳んで逃がせることを確かめる。
+test('Database のカラムを掴んで広げられ、ER図が大きくなる', async ({ page }) => {
+  // 3カラムにした目的そのもの。縦積みでは ER図（852x441 の横長）が
+  // 高さで縛られて 0.21倍にしかならなかった（docs/ui-layout.md §2）。
+  await page.setViewportSize({ width: 1920, height: 860 });
+  await boot(page);
+
+  /** ER図の描画倍率。SVG は縦横比を保って枠に収まる。 */
+  const scale = () =>
+    page.evaluate(() => {
+      const svg = document.querySelector<SVGSVGElement>('svg[role="img"]');
+      if (!svg) return 0;
+      const box = svg.getBoundingClientRect();
+      const view = svg.viewBox.baseVal;
+      return Math.min(box.width / view.width, box.height / view.height);
+    });
+
+  const before = await scale();
+  expect(before).toBeGreaterThan(0.5);
+
+  const handle = page.getByRole('separator', { name: 'Database の幅' });
+  const box = await handle.boundingBox();
+  if (!box) throw new Error('掴み手が見つからない');
+
+  // 左へ引くと Database が広がる。
+  await page.mouse.move(box.x + 3, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 3 - 180, box.y + box.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await expect.poll(scale).toBeGreaterThan(before);
+
+  // ダブルクリックで既定に戻る（動かしすぎて戻せなくなるのを防ぐ）。
+  await handle.dblclick();
+  await expect.poll(scale).toBeCloseTo(before, 2);
+
+  // ポインタが無くても動かせる。
+  await handle.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect.poll(scale).toBeGreaterThan(before);
+});
+
+test('カラム幅はリロードしても保たれる', async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 860 });
+  await boot(page);
+
+  const width = () =>
+    page.evaluate(() =>
+      Math.round(
+        document.querySelector('[class*=wide]')?.children[4]?.getBoundingClientRect().width ?? 0,
+      ),
+    );
+
+  const handle = page.getByRole('separator', { name: 'Database の幅' });
+  await handle.focus();
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  const resized = await width();
+
+  // 遊び方は既読なので、リロード後に開かない。
+  await page.reload();
+  await expect(page.getByRole('separator', { name: 'Database の幅' })).toBeVisible();
+  await expect.poll(width).toBe(resized);
+});
+
+test('左右のカラムを畳むと真ん中が広がり、レールから開き直せる', async ({ page }) => {
+  // 横が足りない画面（13インチ）では、両端を畳めることが逃げ道になる。
   await page.setViewportSize({ width: 1280, height: 620 });
   await boot(page);
 
-  const heights = () =>
-    page.evaluate(() => {
-      const workbench = document.querySelector('[class*=workbench]');
-      const rows = Array.from(workbench?.children ?? []).map((el) =>
-        Math.round(el.getBoundingClientRect().height),
-      );
-      const editor = document.querySelector('.cm-editor');
-      return {
-        database: rows[0] ?? 0,
-        result: rows[2] ?? 0,
-        input: editor ? Math.round(editor.getBoundingClientRect().height) : 0,
-      };
-    });
+  const centerWidth = () =>
+    page.evaluate(() =>
+      Math.round(document.querySelector('[class*=workbench]')?.getBoundingClientRect().width ?? 0),
+    );
 
-  const before = await heights();
-  await page.getByRole('button', { name: '畳む' }).click();
+  const both = await centerWidth();
+
+  // Story を畳む（見出しの「畳む」は Story / Database の2つ）。
+  await page.getByRole('button', { name: '畳む' }).first().click();
+  await expect(page.getByRole('button', { name: 'Story を開く' })).toBeVisible();
+  const withoutStory = await centerWidth();
+  expect(withoutStory).toBeGreaterThan(both);
+
+  // Database も畳む。
+  await page.getByRole('button', { name: '畳む' }).first().click();
   await expect(page.locator('svg[role="img"]')).toHaveCount(0);
-  const after = await heights();
+  expect(await centerWidth()).toBeGreaterThan(withoutStory);
 
-  expect(after.database).toBeLessThan(before.database);
-  expect(after.result).toBeGreaterThan(before.result);
-
-  // 畳んでも入力欄が縮まない（ここが縮むと畳む意味がない）。
-  expect(after.input).toBeGreaterThanOrEqual(before.input);
-
-  await page.getByRole('button', { name: '開く' }).click();
+  // レールから開き直せる。
+  await page.getByRole('button', { name: 'Database を開く' }).click();
   await expect(page.locator('svg[role="img"]')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Story を開く' }).click();
+  await expect.poll(centerWidth).toBe(both);
+});
+
+test('Database を拡大すると ER図がカラムより大きくなる', async ({ page }) => {
+  // 13インチでは Database カラムを広げても 0.49倍が上限（真ん中を守るため）。
+  // 拡大はそこを超えるための逃げ道。倍率は CASE の erCanvas の縦横比で変わり、
+  // CASE 001（縦に長い）が最も不利で 0.81倍。
+  await page.setViewportSize({ width: 1280, height: 620 });
+  await boot(page);
+
+  await page.getByRole('button', { name: '拡大' }).click();
+  const scale = await page.evaluate(() => {
+    const popup = document.querySelector('[class*=popup]');
+    const svg = popup?.querySelector('svg[role="img"]') as SVGSVGElement | null;
+    if (!svg) return 0;
+    const box = svg.getBoundingClientRect();
+    const view = svg.viewBox.baseVal;
+    return Math.min(box.width / view.width, box.height / view.height);
+  });
+  expect(scale).toBeGreaterThan(0.75);
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[class*=popup]')).toHaveCount(0);
 });
 
 test('エディタの入力欄が画面の高さに応じて広がる', async ({ page }) => {

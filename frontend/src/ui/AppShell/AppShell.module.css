@@ -72,50 +72,107 @@
   }
 }
 
-/* --- デスクトップ: 2カラム ---------------------------------------------- */
+/* --- デスクトップ: 3カラム ---------------------------------------------- */
+
+/*
+ * Story | Editor+Result | Database。
+ *
+ * `grid-template-columns` は AppShell.tsx が組み立てる（幅が状態のため）。
+ * トラックは常に5本——カラム / 掴み手 / 中央 / 掴み手 / カラム。
+ * 畳んだ側は掴み手を 0px にしてレールに差し替える。
+ *
+ * 3カラムにした理由は columns.ts と docs/ui-layout.md に書いてある。
+ * 要するに、ER図（852x441 の横長）を縦積みに入れると高さで縛られて
+ * 0.21倍にしかならず、横に出すと縛りが横幅だけになる。
+ */
 .wide {
   display: grid;
-  grid-template-columns: var(--story-column) minmax(0, 1fr);
-  gap: var(--space-3);
+  gap: 0; /* 掴み手そのものが隙間を兼ねる */
   padding: var(--space-3);
   flex: 1;
   min-height: 0;
 }
 
-/* 右カラム: Database / Editor / Result を縦に積む。
+/* 真ん中: Editor と Result。
  *
- * 設計と実測の根拠は docs/ui-layout.md。要点は3つ。
- *
- * 1. **各面に下限を置く。** 3面で高さを分け合うと、13インチ（3面で 539px）では
- *    どれも中途半端になる。以前は入力欄が 112px（4.4行）しかなかった。
- * 2. **下限の合計に足りなければ流す。** 1画面に収めることを優先すると、
- *    必ずどこかが潰れる。収まる画面（FHD 以上）では流れない。
- * 3. **Editor と Result の下限の和は 539px を超えない**（16rem + 隙間 + 14rem
- *    = 492px）。この2つは1回の試行で必ず両方使うので、13インチで Database を
- *    通り過ぎたあとは**必ず同時に見える**必要がある。ここが破れると、
- *    実行ボタンを押したら結果が画面外、という事故になる。
- *
- * 伸びしろ（fr）は Result > Editor > Database の順。Database はたまに参照する面で、
- * 読むための大きさは「拡大」が受け持つ（DatabasePanel.tsx）。
+ * 縦は2つで分けるだけなので、13インチ（539px）でも
+ * 256 + 8 + 224 = 488px に収まる。**もう縦の取り合いは無い。**
+ * overflow-y は、それでも足りないほど縦が短い窓のための保険。
  */
 .workbench {
   display: grid;
-  grid-template-rows: minmax(14rem, 0.8fr) minmax(16rem, 1fr) minmax(14rem, 1.2fr);
-  /* 隙間だけ 1段詰める。Database を畳んだとき（下）に 13インチで
-     スクロールを消しきるのに、ちょうどこの 8px が要る。 */
+  grid-template-rows: minmax(16rem, 1fr) minmax(14rem, 1.2fr);
   gap: var(--space-2);
   min-height: 0;
   overflow-y: auto;
 }
 
-/* Database を畳んだら見出しだけにして、空いた分を Editor と Result に回す。
- *
- * **下限は畳んでも下げない。**ここを下げると、畳んだ瞬間に入力欄が縮むという
- * 逆さまなことが起きる（畳む意味が無くなる）。見出しだけの 41px と合わせて
- * 41 + 256 + 224 + 隙間 16 = 537px ≤ 539px なので、13インチでもスクロールが消える。
+/* --- 掴み手 --------------------------------------------------------------- */
+
+/*
+ * 幅は 6px だが、::before で当たり判定を左右に広げてある。
+ * 6px を正確に掴ませるのは、ポインタの精度に対して酷なので。
  */
-.workbench[data-database-collapsed='true'] {
-  grid-template-rows: auto minmax(16rem, 1fr) minmax(14rem, 1.2fr);
+.handle {
+  position: relative;
+  cursor: col-resize;
+  touch-action: none; /* ドラッグ中にページがスクロールしないように */
+}
+
+.handle::before {
+  content: '';
+  position: absolute;
+  inset: 0 -3px;
+}
+
+.handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: transparent;
+  transition: background var(--transition-fast);
+}
+
+.handle:hover::after,
+.handle:focus-visible::after {
+  background: var(--accent);
+  width: 2px;
+}
+
+.handle:focus-visible {
+  outline: none;
+}
+
+/* --- 畳んだカラムのレール -------------------------------------------------- */
+.rail {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.rail:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.railLabel {
+  writing-mode: vertical-rl;
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* --- モバイル: タブ ------------------------------------------------------ */

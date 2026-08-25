@@ -29,6 +29,8 @@ export interface StoryPanelProps {
   onRevealAnswer: (objectiveId: string) => void;
   onOpenFinalAnswer: () => void;
   onReset: () => void;
+  /** カラムごと畳む。開き直すのは AppShell のレール。 */
+  onCollapse: () => void;
 }
 
 export function StoryPanel({
@@ -40,6 +42,7 @@ export function StoryPanel({
   onRevealAnswer,
   onOpenFinalAnswer,
   onReset,
+  onCollapse,
 }: StoryPanelProps) {
   const active = activeObjectives(caseData, progress);
   const total = caseData.story.objectives.length;
@@ -50,7 +53,7 @@ export function StoryPanel({
   const latestBeat = progress.storyBeats[progress.storyBeats.length - 1];
 
   return (
-    <Panel title="Story" aside={`${String(done)} / ${String(total)}`}>
+    <Panel title="Story" aside={`${String(done)} / ${String(total)}`} onCollapse={onCollapse}>
       <div className={styles.body}>
         {notice !== undefined && <p className={styles.notice}>{notice}</p>}
 

@@ -108,7 +108,7 @@ export function CaseSession({
   const [result, setResult] = useState<ResultState>({ kind: 'idle' });
   // タブと実行履歴。進捗とは別のキーに保存する（useWorkspace の説明を参照）。
   const { workspace, update: updateWorkspace, reset: resetWorkspace } = useWorkspace(caseId);
-  const { databaseCollapsed, toggleDatabase } = useLayoutPreference();
+  const layout = useLayoutPreference();
   const [justEarned, setJustEarned] = useState<readonly string[]>([]);
   const [finalOpen, setFinalOpen] = useState(false);
   const [cleared, setCleared] = useState<ClearedAnnouncement | null>(null);
@@ -264,7 +264,7 @@ export function CaseSession({
         onThemeChange={onThemeChange}
         onBackToIndex={onBackToIndex}
         onOpenHowToPlay={onOpenHowToPlay}
-        databaseCollapsed={databaseCollapsed}
+        layout={layout}
         story={
           <StoryPanel
             caseData={loaded.caseData}
@@ -277,14 +277,11 @@ export function CaseSession({
             onRevealAnswer={onRevealAnswer}
             onOpenFinalAnswer={() => setFinalOpen(true)}
             onReset={onReset}
+            onCollapse={layout.toggleStory}
           />
         }
         database={
-          <DatabasePanel
-            schema={loaded.caseData.schema}
-            collapsed={databaseCollapsed}
-            onToggleCollapsed={toggleDatabase}
-          />
+          <DatabasePanel schema={loaded.caseData.schema} onCollapse={layout.toggleDatabase} />
         }
         editor={
           <SqlEditor
