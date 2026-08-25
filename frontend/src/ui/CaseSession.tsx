@@ -34,6 +34,7 @@ import { ResultPanel } from './ResultTable/ResultTable.tsx';
 import type { ResultState } from './ResultTable/ResultTable.tsx';
 import { SqlEditor } from './SqlEditor/SqlEditor.tsx';
 import { useWorkspace } from './SqlEditor/useWorkspace.ts';
+import { useLayoutPreference } from './hooks/useLayoutPreference.ts';
 import {
   activeTab,
   addTab,
@@ -107,9 +108,23 @@ export function CaseSession({
   const [result, setResult] = useState<ResultState>({ kind: 'idle' });
   // タブと実行履歴。進捗とは別のキーに保存する（useWorkspace の説明を参照）。
   const { workspace, update: updateWorkspace, reset: resetWorkspace } = useWorkspace(caseId);
+  const layout = useLayoutPreference();
   const [justEarned, setJustEarned] = useState<readonly string[]>([]);
   const [finalOpen, setFinalOpen] = useState(false);
   const [cleared, setCleared] = useState<ClearedAnnouncement | null>(null);
+  const resultRef = useRef<HTMLElement | null>(null);
+
+  /*
+   * 実行したら結果を画面内に入れる。
+   *
+   * 縦に狭い画面では右カラムがスクロールする（AppShell.module.css）。
+   * Database を見上げたまま実行すると結果が画面外に出るので、そこだけ戻す。
+   * `block: 'nearest'` なので、すでに見えているときは何も起きない。
+   */
+  useEffect(() => {
+    if (result.kind !== 'result' && result.kind !== 'error') return;
+    resultRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [result]);
 
   useEffect(() => {
     const engine = new WorkerSqlEngine(browserWorkerFactory);
@@ -249,6 +264,7 @@ export function CaseSession({
         onThemeChange={onThemeChange}
         onBackToIndex={onBackToIndex}
         onOpenHowToPlay={onOpenHowToPlay}
+        layout={layout}
         story={
           <StoryPanel
             caseData={loaded.caseData}
@@ -261,9 +277,12 @@ export function CaseSession({
             onRevealAnswer={onRevealAnswer}
             onOpenFinalAnswer={() => setFinalOpen(true)}
             onReset={onReset}
+            onCollapse={layout.toggleStory}
           />
         }
-        database={<DatabasePanel schema={loaded.caseData.schema} />}
+        database={
+          <DatabasePanel schema={loaded.caseData.schema} onCollapse={layout.toggleDatabase} />
+        }
         editor={
           <SqlEditor
             workspace={workspace}
@@ -286,7 +305,7 @@ export function CaseSession({
             }}
           />
         }
-        result={<ResultPanel state={result} />}
+        result={<ResultPanel state={result} panelRef={resultRef} />}
       />
 
       <ObjectiveCleared

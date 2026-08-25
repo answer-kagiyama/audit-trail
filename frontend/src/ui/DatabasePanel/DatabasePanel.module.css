@@ -54,10 +54,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  padding-top: var(--space-2);
   font-size: var(--text-xs);
   color: var(--text-muted);
-  flex: none;
+  margin-right: auto;
 }
 
 .legendItem {
@@ -66,12 +65,30 @@
   gap: var(--space-1);
 }
 
+/*
+ * 凡例と代替一覧は横に並べる。
+ *
+ * 縦に積むと 57px 使う。パネルは横に 892〜2172px あって余っているのに、
+ * 縦は Database / Editor / Result で奪い合っている——安いほうを使う。
+ * 代替一覧を開いたときだけ、折り返して全幅を取る。
+ */
+.erFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  flex: none;
+}
+
 /* ER図の代替表現。既定は畳んでおく。 */
 .relationList {
-  flex: none;
-  padding-top: var(--space-2);
   font-size: var(--text-xs);
   color: var(--text-secondary);
+}
+
+.relationList[open] {
+  flex-basis: 100%;
 }
 
 .relationSummary {
@@ -90,4 +107,80 @@
 
 .relationList code {
   color: var(--accent);
+}
+
+/* --- 拡大 ----------------------------------------------------------------- */
+
+/*
+ * 常設のパネルは、どう配分しても ER図を読める大きさにはならない。
+ * 図を等倍で出すには 566px 要るのに、13インチのノートでは
+ * Database / Editor / Result の3面に使える高さが 539px しかない
+ * （docs/ui-layout.md §2.3）。だから読むための面を別に用意する。
+ */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--backdrop);
+  z-index: 60;
+}
+
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 61;
+  width: 92vw;
+  height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popup);
+  overflow: hidden;
+}
+
+/* 焦点はダイアログ自身に置く。読む位置を決めるための焦点なので輪は出さない。 */
+.popup:focus-visible {
+  outline: none;
+}
+
+.popupHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border-subtle);
+  flex: none;
+}
+
+.popupTitle {
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.popupClose {
+  appearance: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  padding: 0 var(--space-2);
+  cursor: pointer;
+}
+
+.popupClose:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.popupBody {
+  flex: 1;
+  min-height: 0;
 }

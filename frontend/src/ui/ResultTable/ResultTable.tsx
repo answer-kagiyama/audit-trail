@@ -4,6 +4,7 @@
  * 空結果を「0件でした」と突き放さない。0件は「そこには無い」という捜査結果であり、
  * それ自体が情報である（docs/game-design.md#1-コアループ）。
  */
+import type { Ref } from 'react';
 import type { QueryResult } from '../../engine/types.ts';
 import type { FriendlyError } from '../../game/errorMap.ts';
 import { Panel } from '../Panel/Panel.tsx';
@@ -16,9 +17,15 @@ export type ResultState =
   | { kind: 'result'; result: QueryResult }
   | { kind: 'error'; error: FriendlyError };
 
-export function ResultPanel({ state }: { state: ResultState }) {
+export function ResultPanel({
+  state,
+  panelRef,
+}: {
+  state: ResultState;
+  panelRef?: Ref<HTMLElement> | undefined;
+}) {
   return (
-    <Panel title="Result" aside={summary(state)} padded={false}>
+    <Panel title="Result" aside={summary(state)} padded={false} panelRef={panelRef}>
       <Body state={state} />
     </Panel>
   );
