@@ -359,6 +359,63 @@ test('キーボードだけでエディタから出て、タブを切り替え�
   await expect(page.locator('[aria-current="true"]')).toHaveText(/^クエリ 1/);
 });
 
+test('遊び方の見取り図が、実際の画面の並びと一致する', async ({ page }) => {
+  // 見取り図が実物とずれていると、初見の人はここで迷子になる。
+  // レイアウトを変えたらここが落ちる、という形にしておく。
+  await page.setViewportSize({ width: 1920, height: 900 });
+  await page.goto('/case-001');
+  await page.getByRole('button', { name: '調査をはじめる' }).waitFor({ timeout: 60_000 });
+
+  const boxes = () =>
+    page.evaluate(() => {
+      const map = Array.from(document.querySelectorAll('div')).find(
+        (e) =>
+          e.className.includes('_map_') &&
+          !e.className.includes('mapWrap') &&
+          !e.className.includes('mapNote'),
+      );
+      if (!map) return {};
+      const out: Record<string, { x: number; y: number; h: number }> = {};
+      for (const zone of Array.from(map.children)) {
+        const name = zone.querySelector('span')?.textContent ?? '?';
+        const r = zone.getBoundingClientRect();
+        out[name] = { x: Math.round(r.left), y: Math.round(r.top), h: Math.round(r.height) };
+      }
+      return out;
+    });
+
+  const map = await boxes();
+  // 左から Story → SQL Editor / Result → Database
+  expect(map['Story']!.x).toBeLessThan(map['SQL Editor']!.x);
+  expect(map['SQL Editor']!.x).toBeLessThan(map['Database']!.x);
+  // 両端は縦いっぱい、真ん中だけ2段
+  expect(map['Story']!.h).toBeGreaterThan(map['SQL Editor']!.h * 1.5);
+  expect(map['Database']!.h).toBeGreaterThan(map['SQL Editor']!.h * 1.5);
+  expect(map['Result']!.y).toBeGreaterThan(map['SQL Editor']!.y);
+  expect(map['Result']!.x).toBe(map['SQL Editor']!.x);
+
+  // 実際の画面も同じ並びであること。
+  await page.getByRole('button', { name: '調査をはじめる' }).click();
+  const real = await page.evaluate(() => {
+    const wide = document.querySelector('[class*=wide]');
+    const workbench = wide?.querySelector('[class*=workbench]');
+    const left = (el: Element | null | undefined) =>
+      Math.round(el?.getBoundingClientRect().left ?? -1);
+    const top = (el: Element | null | undefined) =>
+      Math.round(el?.getBoundingClientRect().top ?? -1);
+    return {
+      story: left(wide?.children[0]),
+      center: left(workbench),
+      database: left(wide?.children[4]),
+      editorY: top(workbench?.children[0]),
+      resultY: top(workbench?.children[1]),
+    };
+  });
+  expect(real.story).toBeLessThan(real.center);
+  expect(real.center).toBeLessThan(real.database);
+  expect(real.resultY).toBeGreaterThan(real.editorY);
+});
+
 test('エディタのタブ列は tablist を名乗らない', async ({ page }) => {
   // 各タブに「閉じる」が同居していて ARIA のタブパターンの前提から外れる。
   // role だけ名乗ると、読み上げの案内と実際の操作が食い違う。
