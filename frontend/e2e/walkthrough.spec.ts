@@ -327,6 +327,54 @@ test('Database を拡大すると ER図がカラムより大きくなる', async
   await expect(page.locator('[class*=popup]')).toHaveCount(0);
 });
 
+test('キーボードだけでエディタから出て、タブを切り替えられる', async ({ page }) => {
+  // Tab はインデントに使うので、そのままだとエディタがキーボードトラップになる
+  // （WCAG 2.1.2）。Escape を挟むと次の Tab が焦点移動になる。
+  await boot(page);
+
+  await page.getByRole('button', { name: 'タブを追加' }).click();
+  await page.locator('.cm-content').click();
+  await page.keyboard.type('SELECT 1');
+
+  // 素の Tab はインデントのまま。焦点はエディタに残る。
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => !!document.activeElement?.closest('.cm-editor'))).toBe(true);
+
+  // Escape を挟むと外へ出られる。
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => !!document.activeElement?.closest('.cm-editor'))).toBe(false);
+
+  // そこからキーボードだけで1枚目のタブへ戻して切り替える。
+  await page.locator('.cm-content').click();
+  await page.keyboard.press('Escape');
+  const focusedName = () => page.evaluate(() => document.activeElement?.textContent?.trim() ?? '');
+  for (let i = 0; i < 8; i++) {
+    await page.keyboard.press('Shift+Tab');
+    if ((await focusedName()).startsWith('クエリ 1')) break;
+  }
+  expect(await focusedName()).toMatch(/^クエリ 1/);
+
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[aria-current="true"]')).toHaveText(/^クエリ 1/);
+});
+
+test('エディタのタブ列は tablist を名乗らない', async ({ page }) => {
+  // 各タブに「閉じる」が同居していて ARIA のタブパターンの前提から外れる。
+  // role だけ名乗ると、読み上げの案内と実際の操作が食い違う。
+  await boot(page);
+
+  const strip = page.locator('[aria-label="SQLエディタのタブ"]');
+  await expect(strip).toHaveAttribute('role', 'group');
+  await expect(strip.locator('[role="tab"]')).toHaveCount(0);
+
+  // 選択中は aria-current で示す。名前だけで用途が分かる。
+  await expect(strip.locator('[aria-current="true"]')).toHaveCount(1);
+  // 読み上げ名は「クエリ 1 （選択中）」。要素の境目に区切りが入る。
+  await expect(strip.getByRole('button', { name: /^クエリ 1\s*（選択中）$/ })).toBeVisible();
+  await expect(strip.getByRole('button', { name: 'クエリ 1 を閉じる' })).toBeVisible();
+});
+
 test('エディタの入力欄が画面の高さに応じて広がる', async ({ page }) => {
   // 以前は grid の行が auto かつ .surface が max-height 18rem だったため、
   // どれだけ縦に広いモニターでも入力欄は 112px のままだった。

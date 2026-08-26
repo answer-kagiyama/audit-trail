@@ -8,7 +8,13 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { EditorState } from '@codemirror/state';
 import { EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view';
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  indentLess,
+  indentMore,
+} from '@codemirror/commands';
 import { bracketMatching, indentOnInput } from '@codemirror/language';
 import { sql, SQLite } from '@codemirror/lang-sql';
 import { auditTrailEditorTheme } from './theme.ts';
@@ -50,6 +56,8 @@ export function useCodeMirror(options: UseCodeMirrorOptions): CodeMirrorHandle {
   const currentKeyRef = useRef(options.docKey);
   /** State 差し替え中の更新通知を、利用者の編集と区別するための目印。 */
   const swappingRef = useRef(false);
+  /** Escape を押した直後か。Tab を焦点移動に譲るために使う（tabEscapeKeymap 参照）。 */
+  const escapedRef = useRef(false);
   /** 拡張一式を持った EditorState を作る関数。マウント時に確定する。 */
   const createStateRef = useRef<((doc: string) => EditorState) | null>(null);
 
@@ -90,6 +98,7 @@ export function useCodeMirror(options: UseCodeMirrorOptions): CodeMirrorHandle {
           auditTrailEditorTheme,
           EditorView.lineWrapping,
           keymap.of([
+            ...tabEscapeKeymap(escapedRef),
             {
               key: 'Mod-Enter',
               preventDefault: true,
@@ -100,10 +109,20 @@ export function useCodeMirror(options: UseCodeMirrorOptions): CodeMirrorHandle {
             },
             { key: 'Alt-ArrowUp', preventDefault: true, run: applyHistory(-1) },
             { key: 'Alt-ArrowDown', preventDefault: true, run: applyHistory(1) },
-            indentWithTab,
             ...historyKeymap,
             ...defaultKeymap,
           ]),
+          // Escape の効き目は「次の Tab」1回だけ。
+          // 他のキーを打った時点で、外へ出るつもりはもう無い。
+          //
+          // 修飾キー単体の keydown は数に入れない。Shift+Tab は Shift の
+          // keydown が先に飛ぶので、ここで消すと Shift+Tab だけ抜けられなくなる。
+          EditorView.domEventHandlers({
+            keydown: (event) => {
+              if (!KEEPS_ESCAPE.has(event.key)) escapedRef.current = false;
+              return false;
+            },
+          }),
           EditorView.updateListener.of((update) => {
             // 差し替え中の変更はタブ切替であって、利用者の編集ではない。
             if (update.docChanged && !swappingRef.current) {
@@ -168,4 +187,45 @@ export function useCodeMirror(options: UseCodeMirrorOptions): CodeMirrorHandle {
     }),
     [],
   );
+}
+
+/** これらのキーの keydown では Escape の効き目を消さない（修飾キー単体を含む）。 */
+const KEEPS_ESCAPE = new Set(['Escape', 'Tab', 'Shift', 'Control', 'Alt', 'Meta', 'CapsLock']);
+
+/**
+ * Tab によるキーボードトラップを外す。
+ *
+ * `indentWithTab` をそのまま入れると Tab / Shift-Tab がエディタに吸われ、
+ * **キーボードだけの利用者はエディタから出られなくなる**（WCAG 2.1.2 に反する）。
+ * タブ列も実行ボタンも、焦点を当てる手段が無くなってしまう。
+ *
+ * CodeMirror が案内している逃げ道をそのまま実装する——
+ * **Escape を一度押すと、次の Tab は焦点移動になる。**
+ * 何も押していないときの Tab は今までどおりインデント。
+ *
+ * 「Escape を押す」こと自体は気づきにくいので、
+ * エディタの下（ツールバー）に案内を出してある（SqlEditor.tsx）。
+ */
+function tabEscapeKeymap(escaped: React.RefObject<boolean>) {
+  /** Escape 後の1回だけ、ブラウザに Tab を渡す。 */
+  const passThroughOnce = (indent: (view: EditorView) => boolean) => (view: EditorView) => {
+    if (escaped.current) {
+      escaped.current = false;
+      return false; // false を返すとブラウザの既定動作＝焦点移動になる
+    }
+    return indent(view);
+  };
+
+  return [
+    {
+      key: 'Escape',
+      run: () => {
+        escaped.current = true;
+        return true;
+      },
+    },
+    // shift は別バインドではなく `shift` プロパティで持つ（indentWithTab と同じ形）。
+    // 'Shift-Tab' を独立した key として書くと Shift+Tab が拾われない。
+    { key: 'Tab', run: passThroughOnce(indentMore), shift: passThroughOnce(indentLess) },
+  ];
 }

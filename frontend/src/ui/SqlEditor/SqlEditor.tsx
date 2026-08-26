@@ -109,7 +109,17 @@ export function SqlEditor({
 
   return (
     <div className={styles.editor}>
-      <div className={styles.tabs} role="tablist" aria-label="SQLエディタのタブ">
+      {/*
+        role="tablist" は使わない。
+        ARIA のタブパターンは「タブ＝ひとつの操作要素」を前提にしていて、
+        矢印キーでの移動と `tabindex="-1"` による焦点管理まで含めて1組になっている。
+        ここは各タブの中に「閉じる」が同居していて、その前提から外れる——
+        role だけ名乗ると、読み上げの案内と実際の操作が食い違う。
+
+        素直に「ボタンの並び」として出し、選択中は aria-current で示す。
+        Tab キーで全部のボタンを順に辿れる（数はせいぜい8個）。
+      */}
+      <div className={styles.tabs} role="group" aria-label="SQLエディタのタブ">
         {workspace.tabs.map((item) => {
           const selected = item.id === tab.id;
           return (
@@ -130,8 +140,7 @@ export function SqlEditor({
               ) : (
                 <button
                   type="button"
-                  role="tab"
-                  aria-selected={selected}
+                  aria-current={selected ? 'true' : undefined}
                   className={styles.tabButton}
                   onClick={() => {
                     onSelectTab(item.id);
@@ -142,6 +151,9 @@ export function SqlEditor({
                   title="ダブルクリックで名前を変更"
                 >
                   {item.name}
+                  <span className="visually-hidden">
+                    {selected ? '（選択中）' : ' に切り替える'}
+                  </span>
                 </button>
               )}
 
@@ -220,6 +232,9 @@ export function SqlEditor({
         </details>
 
         <span className={styles.hint}>Alt + ↑ / ↓</span>
+        {/* Tab はインデントに使うので、焦点を外に出す方法を明示する。
+            これが無いと、キーボードだけの利用者はエディタから出られない。 */}
+        <span className={styles.hint}>Esc → Tab で外へ</span>
       </div>
     </div>
   );
