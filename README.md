@@ -35,7 +35,10 @@ Claude が設計資料を書き、Phase ごとに実装 → テスト → レビ
 4. [docs/adr/](./docs/adr/) — 技術選定を理由つきで記録したもの。後から readable な形で
    「なぜその選択をしたか」を追える
 5. [docs/mvp-issues.md](./docs/mvp-issues.md) — 実装タスクを1 Issue = 1成果物で分解したもの
-6. GitHub の Pull Request 履歴 — 各PhaseのPR説明とレビューのやり取り。
+6. [docs/ui-layout.md](./docs/ui-layout.md) — **設計が一度外れて、直した記録**。
+   計測に基づいて決めた設計が、そもそもの計測値がバグ由来だったせいで誤っていた。
+   §4 と §9 に、何をどう間違えたかがそのまま残してある
+7. GitHub の Pull Request 履歴 — 各PhaseのPR説明とレビューのやり取り。
    実際の「計画 → 実装 → 検証 → 人間のフィードバック」のループが残っている
 
 ⚠️ ライセンスは付与していません（[LICENSE](./LICENSE) 参照）。閲覧・参考は自由ですが、
@@ -123,6 +126,10 @@ npm run cases:check   # コミット済みの .sqlite とのズレを検出（CI
 
 [docs/mvp-issues.md](./docs/mvp-issues.md) の **#34 実プレイテスト**。
 SQL中級者を含む3〜5人に通しで遊んでもらい、詰まりどころを計測する。
+**Phase 6 で残っているのはこれだけ**で、あとは作者が遊んで挙げた分の対応
+（[roadmap.md](./docs/roadmap.md#phase-6-公開)）まで含めて片付いている。
+
+その先は CASE 003（`LAG` / `LEAD` を扱う難易度帯）。
 
 ## ライセンス
 

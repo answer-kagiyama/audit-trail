@@ -79,10 +79,15 @@
   padding: var(--space-3);
 }
 
+/*
+ * 調査画面の3カラムをそのまま縮めた形にする。
+ * Story ｜ SQL Editor + Result ｜ Database（docs/ui-layout.md §5.1）。
+ * 見取り図が実物と違うと、初見の人はここで迷子になる。
+ */
 .map {
   display: grid;
-  grid-template-columns: 1fr 1.6fr;
-  grid-template-rows: auto auto auto;
+  grid-template-columns: 1fr 1.5fr 1.2fr;
+  grid-template-rows: auto auto;
   gap: var(--space-2);
   min-height: 11rem;
 }
@@ -97,8 +102,15 @@
   gap: var(--space-1);
 }
 
+/* 両端は縦いっぱい。真ん中だけが Editor と Result の2段になる。 */
 .zoneStory {
-  grid-row: 1 / 4;
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+
+.zoneDatabase {
+  grid-column: 3;
+  grid-row: 1 / 3;
 }
 
 .zoneName {
@@ -114,12 +126,27 @@
   line-height: var(--leading-normal);
 }
 
+/* 掴み手と折り畳みの案内。図の直後に置く。 */
+.mapNote {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: var(--leading-normal);
+}
+
+.mapNote strong {
+  color: var(--text-secondary);
+}
+
+/* 狭い画面では縦に積む。実際の調査画面もここでタブに切り替わる。 */
 @media (max-width: 560px) {
   .map {
     grid-template-columns: 1fr;
   }
 
-  .zoneStory {
+  .zoneStory,
+  .zoneDatabase {
+    grid-column: auto;
     grid-row: auto;
   }
 }

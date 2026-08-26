@@ -327,6 +327,111 @@ test('Database を拡大すると ER図がカラムより大きくなる', async
   await expect(page.locator('[class*=popup]')).toHaveCount(0);
 });
 
+test('キーボードだけでエディタから出て、タブを切り替えられる', async ({ page }) => {
+  // Tab はインデントに使うので、そのままだとエディタがキーボードトラップになる
+  // （WCAG 2.1.2）。Escape を挟むと次の Tab が焦点移動になる。
+  await boot(page);
+
+  await page.getByRole('button', { name: 'タブを追加' }).click();
+  await page.locator('.cm-content').click();
+  await page.keyboard.type('SELECT 1');
+
+  // 素の Tab はインデントのまま。焦点はエディタに残る。
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => !!document.activeElement?.closest('.cm-editor'))).toBe(true);
+
+  // Escape を挟むと外へ出られる。
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => !!document.activeElement?.closest('.cm-editor'))).toBe(false);
+
+  // そこからキーボードだけで1枚目のタブへ戻して切り替える。
+  await page.locator('.cm-content').click();
+  await page.keyboard.press('Escape');
+  const focusedName = () => page.evaluate(() => document.activeElement?.textContent?.trim() ?? '');
+  for (let i = 0; i < 8; i++) {
+    await page.keyboard.press('Shift+Tab');
+    if ((await focusedName()).startsWith('クエリ 1')) break;
+  }
+  expect(await focusedName()).toMatch(/^クエリ 1/);
+
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[aria-current="true"]')).toHaveText(/^クエリ 1/);
+});
+
+test('遊び方の見取り図が、実際の画面の並びと一致する', async ({ page }) => {
+  // 見取り図が実物とずれていると、初見の人はここで迷子になる。
+  // レイアウトを変えたらここが落ちる、という形にしておく。
+  await page.setViewportSize({ width: 1920, height: 900 });
+  await page.goto('/case-001');
+  await page.getByRole('button', { name: '調査をはじめる' }).waitFor({ timeout: 60_000 });
+
+  const boxes = () =>
+    page.evaluate(() => {
+      const map = Array.from(document.querySelectorAll('div')).find(
+        (e) =>
+          e.className.includes('_map_') &&
+          !e.className.includes('mapWrap') &&
+          !e.className.includes('mapNote'),
+      );
+      if (!map) return {};
+      const out: Record<string, { x: number; y: number; h: number }> = {};
+      for (const zone of Array.from(map.children)) {
+        const name = zone.querySelector('span')?.textContent ?? '?';
+        const r = zone.getBoundingClientRect();
+        out[name] = { x: Math.round(r.left), y: Math.round(r.top), h: Math.round(r.height) };
+      }
+      return out;
+    });
+
+  const map = await boxes();
+  // 左から Story → SQL Editor / Result → Database
+  expect(map['Story']!.x).toBeLessThan(map['SQL Editor']!.x);
+  expect(map['SQL Editor']!.x).toBeLessThan(map['Database']!.x);
+  // 両端は縦いっぱい、真ん中だけ2段
+  expect(map['Story']!.h).toBeGreaterThan(map['SQL Editor']!.h * 1.5);
+  expect(map['Database']!.h).toBeGreaterThan(map['SQL Editor']!.h * 1.5);
+  expect(map['Result']!.y).toBeGreaterThan(map['SQL Editor']!.y);
+  expect(map['Result']!.x).toBe(map['SQL Editor']!.x);
+
+  // 実際の画面も同じ並びであること。
+  await page.getByRole('button', { name: '調査をはじめる' }).click();
+  const real = await page.evaluate(() => {
+    const wide = document.querySelector('[class*=wide]');
+    const workbench = wide?.querySelector('[class*=workbench]');
+    const left = (el: Element | null | undefined) =>
+      Math.round(el?.getBoundingClientRect().left ?? -1);
+    const top = (el: Element | null | undefined) =>
+      Math.round(el?.getBoundingClientRect().top ?? -1);
+    return {
+      story: left(wide?.children[0]),
+      center: left(workbench),
+      database: left(wide?.children[4]),
+      editorY: top(workbench?.children[0]),
+      resultY: top(workbench?.children[1]),
+    };
+  });
+  expect(real.story).toBeLessThan(real.center);
+  expect(real.center).toBeLessThan(real.database);
+  expect(real.resultY).toBeGreaterThan(real.editorY);
+});
+
+test('エディタのタブ列は tablist を名乗らない', async ({ page }) => {
+  // 各タブに「閉じる」が同居していて ARIA のタブパターンの前提から外れる。
+  // role だけ名乗ると、読み上げの案内と実際の操作が食い違う。
+  await boot(page);
+
+  const strip = page.locator('[aria-label="SQLエディタのタブ"]');
+  await expect(strip).toHaveAttribute('role', 'group');
+  await expect(strip.locator('[role="tab"]')).toHaveCount(0);
+
+  // 選択中は aria-current で示す。名前だけで用途が分かる。
+  await expect(strip.locator('[aria-current="true"]')).toHaveCount(1);
+  // 読み上げ名は「クエリ 1 （選択中）」。要素の境目に区切りが入る。
+  await expect(strip.getByRole('button', { name: /^クエリ 1\s*（選択中）$/ })).toBeVisible();
+  await expect(strip.getByRole('button', { name: 'クエリ 1 を閉じる' })).toBeVisible();
+});
+
 test('エディタの入力欄が画面の高さに応じて広がる', async ({ page }) => {
   // 以前は grid の行が auto かつ .surface が max-height 18rem だったため、
   // どれだけ縦に広いモニターでも入力欄は 112px のままだった。

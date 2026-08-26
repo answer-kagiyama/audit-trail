@@ -36,15 +36,24 @@ const LOOP: { title: string; body: string }[] = [
   },
 ];
 
+/**
+ * 見取り図に並べる4つの面。**この並び順が画面の並び順**（左→右、上→下）。
+ * 調査画面は Story ｜ SQL Editor + Result ｜ Database の3カラム
+ * （docs/ui-layout.md）。
+ */
 const ZONES: { name: string; role: string; className?: string | undefined }[] = [
   {
     name: 'Story',
     role: '事件のあらまし、いま調べること、見つけた証拠、ヒント。困ったらここに戻る。',
     className: styles.zoneStory,
   },
-  { name: 'Database', role: 'どんなテーブルがあるか。ER図と、列の意味とサンプル行。' },
-  { name: 'SQL Editor', role: 'クエリを書いて実行する。過去に実行したSQLも辿れる。' },
+  { name: 'SQL Editor', role: 'クエリを書いて実行する。タブで何本か並行して書ける。' },
   { name: 'Result', role: '実行結果の表。エラーは日本語で理由を出す。' },
+  {
+    name: 'Database',
+    role: 'どんなテーブルがあるか。ER図と、列の意味とサンプル行。',
+    className: styles.zoneDatabase,
+  },
 ];
 
 export function HowToPlay({
@@ -99,6 +108,13 @@ export function HowToPlay({
                 ))}
               </div>
             </div>
+            {/* 掴み手も「畳む」も、言われないと気づかない。ここで一度だけ伝える。 */}
+            <p className={styles.mapNote}>
+              左右の境目を<strong>ドラッグすると幅を変えられます</strong>。 ER図を大きく見たいときは
+              Database を広げてください。
+              見出しの「畳む」で左右を閉じれば、書く場所を最大にできます。
+              画面が狭いときは、この4つがタブに切り替わります。
+            </p>
           </section>
 
           <section>
@@ -116,6 +132,14 @@ export function HowToPlay({
                     <kbd>Alt</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd>
                   </td>
                   <td>過去に実行したSQLを辿る</td>
+                </tr>
+                <tr>
+                  <td>
+                    <kbd>Esc</kbd> → <kbd>Tab</kbd>
+                  </td>
+                  <td>
+                    エディタの外へ移動する（<kbd>Tab</kbd> 単体は字下げ）
+                  </td>
                 </tr>
                 <tr>
                   <td>ヒントを見る</td>
