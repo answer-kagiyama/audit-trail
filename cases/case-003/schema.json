@@ -1,0 +1,442 @@
+{
+  "tables": [
+    {
+      "name": "staff",
+      "description": "職員名簿。",
+      "erLayout": {
+        "x": 700,
+        "y": 70
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "職員ID（主キー）。"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "氏名。"
+        },
+        {
+          "name": "department",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "所属部署。"
+        },
+        {
+          "name": "title",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "役職。退職者は「元職員」。"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 1,
+          "name": "森本 涼",
+          "department": "研究第2部",
+          "title": "主任"
+        },
+        {
+          "id": 2,
+          "name": "久我山 慧",
+          "department": "研究企画部",
+          "title": "主任研究員"
+        },
+        {
+          "id": 4,
+          "name": "早瀬 拓",
+          "department": "警備部",
+          "title": "警備員"
+        }
+      ]
+    },
+    {
+      "name": "cards",
+      "description": "入退館カード。1人が複数枚を持つことがある（紛失や破損で再発行されるため）。",
+      "erLayout": {
+        "x": 470,
+        "y": 70
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "カードID（主キー）。"
+        },
+        {
+          "name": "card_number",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "カード番号。'C-1042' のような文字列。人がカードを指すときはこれを使う。"
+        },
+        {
+          "name": "holder_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "名義人の職員ID。"
+        },
+        {
+          "name": "issued_on",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "発行日（YYYY-MM-DD）。"
+        },
+        {
+          "name": "revoked_on",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "失効日。**NULL はまだ有効**という意味。再発行したら古い方に日付が入るのが正しい運用。"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 1,
+          "card_number": "C-1042",
+          "holder_id": 1,
+          "issued_on": "2025-04-01",
+          "revoked_on": null
+        },
+        {
+          "id": 2,
+          "card_number": "C-1187",
+          "holder_id": 1,
+          "issued_on": "2026-06-11",
+          "revoked_on": null
+        },
+        {
+          "id": 7,
+          "card_number": "C-1033",
+          "holder_id": 5,
+          "issued_on": "2024-04-01",
+          "revoked_on": "2026-02-20"
+        }
+      ]
+    },
+    {
+      "name": "doors",
+      "description": "扉。建物と種類を持つ。",
+      "erLayout": {
+        "x": 60,
+        "y": 70
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "扉ID（主キー）。"
+        },
+        {
+          "name": "door_name",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "扉の名前。'正面玄関' '第3研究室' など。"
+        },
+        {
+          "name": "building",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "建物。'本館' か '研究棟'。"
+        },
+        {
+          "name": "gate_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "扉の種類。**回転扉は1人ずつしか通れないので記録に漏れが無い。自動扉は前の人に続いて通れてしまうので、記録が飛ぶことがある。**"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 1,
+          "door_name": "正面玄関",
+          "building": "本館",
+          "gate_type": "回転扉"
+        },
+        {
+          "id": 2,
+          "door_name": "研究棟連絡通路",
+          "building": "研究棟",
+          "gate_type": "自動扉"
+        },
+        {
+          "id": 3,
+          "door_name": "第3研究室",
+          "building": "研究棟",
+          "gate_type": "自動扉"
+        }
+      ]
+    },
+    {
+      "name": "access_logs",
+      "description": "入退記録。カードをかざすたびに1行増える。",
+      "erLayout": {
+        "x": 250,
+        "y": 70
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "記録ID（主キー）。"
+        },
+        {
+          "name": "card_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "かざされたカードのID。"
+        },
+        {
+          "name": "door_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "通った扉のID。"
+        },
+        {
+          "name": "direction",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "向き。'in'（入る）か 'out'（出る）。**同じ扉なら入と出が交互に並ぶのが正しい。**"
+        },
+        {
+          "name": "occurred_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "通行した日時（YYYY-MM-DD HH:MM:SS）。"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 6,
+          "card_id": 5,
+          "door_id": 1,
+          "direction": "in",
+          "occurred_at": "2026-06-12 20:00:00"
+        },
+        {
+          "id": 31,
+          "card_id": 5,
+          "door_id": 2,
+          "direction": "in",
+          "occurred_at": "2026-06-13 02:10:00"
+        },
+        {
+          "id": 32,
+          "card_id": 5,
+          "door_id": 4,
+          "direction": "in",
+          "occurred_at": "2026-06-13 02:14:00"
+        }
+      ]
+    },
+    {
+      "name": "equipment",
+      "description": "機材マスタ。",
+      "erLayout": {
+        "x": 400,
+        "y": 320
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "機材ID（主キー）。"
+        },
+        {
+          "name": "asset_tag",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "資産番号。'TX-7' のような文字列。"
+        },
+        {
+          "name": "model_name",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "機材名。"
+        },
+        {
+          "name": "category",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "分類。'prototype'（試作機）か 'instrument'（測定器）。"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 1,
+          "asset_tag": "TX-7",
+          "model_name": "次世代測位モジュール試作機",
+          "category": "prototype"
+        },
+        {
+          "id": 2,
+          "asset_tag": "AN-12",
+          "model_name": "スペクトラムアナライザ",
+          "category": "instrument"
+        },
+        {
+          "id": 4,
+          "asset_tag": "TX-5",
+          "model_name": "測位モジュール試作機（旧型）",
+          "category": "prototype"
+        }
+      ]
+    },
+    {
+      "name": "checkouts",
+      "description": "持ち出し台帳。返却の登録に本人確認は無く、端末から誰でも打てる。",
+      "erLayout": {
+        "x": 640,
+        "y": 300
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "pk",
+          "description": "台帳ID（主キー）。"
+        },
+        {
+          "name": "equipment_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "持ち出された機材のID。"
+        },
+        {
+          "name": "staff_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "key": "fk",
+          "description": "持ち出した職員のID。"
+        },
+        {
+          "name": "checked_out_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "持ち出した日時。"
+        },
+        {
+          "name": "returned_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "返却された日時。**NULL はまだ返っていない**という意味。"
+        }
+      ],
+      "sampleRows": [
+        {
+          "id": 1,
+          "equipment_id": 1,
+          "staff_id": 1,
+          "checked_out_at": "2026-06-12 10:20:00",
+          "returned_at": "2026-06-13 03:12:00"
+        },
+        {
+          "id": 2,
+          "equipment_id": 2,
+          "staff_id": 5,
+          "checked_out_at": "2026-06-10 09:40:00",
+          "returned_at": "2026-06-11 17:05:00"
+        },
+        {
+          "id": 3,
+          "equipment_id": 3,
+          "staff_id": 3,
+          "checked_out_at": "2026-06-09 13:15:00",
+          "returned_at": null
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel-card-holder",
+      "from": {
+        "table": "cards",
+        "column": "holder_id"
+      },
+      "to": {
+        "table": "staff",
+        "column": "id"
+      },
+      "cardinality": "many-to-one",
+      "label": "カードの名義人",
+      "description": "そのカードが誰に発行されたか。1人が複数枚を持ちうる。"
+    },
+    {
+      "id": "rel-log-card",
+      "from": {
+        "table": "access_logs",
+        "column": "card_id"
+      },
+      "to": {
+        "table": "cards",
+        "column": "id"
+      },
+      "cardinality": "many-to-one",
+      "label": "かざされたカード",
+      "description": "その通行に使われたカード。**持ち主が通ったとは限らない。**"
+    },
+    {
+      "id": "rel-log-door",
+      "from": {
+        "table": "access_logs",
+        "column": "door_id"
+      },
+      "to": {
+        "table": "doors",
+        "column": "id"
+      },
+      "cardinality": "many-to-one",
+      "label": "通った扉",
+      "description": "その記録が残った扉。"
+    },
+    {
+      "id": "rel-checkout-equipment",
+      "from": {
+        "table": "checkouts",
+        "column": "equipment_id"
+      },
+      "to": {
+        "table": "equipment",
+        "column": "id"
+      },
+      "cardinality": "many-to-one",
+      "label": "持ち出された機材",
+      "description": "台帳に記録された機材。"
+    },
+    {
+      "id": "rel-checkout-staff",
+      "from": {
+        "table": "checkouts",
+        "column": "staff_id"
+      },
+      "to": {
+        "table": "staff",
+        "column": "id"
+      },
+      "cardinality": "many-to-one",
+      "label": "持ち出した人",
+      "description": "台帳に名前が載っている職員。"
+    }
+  ],
+  "erCanvas": {
+    "width": 900,
+    "height": 460
+  }
+}

@@ -59,7 +59,7 @@ Claude が設計資料を書き、Phase ごとに実装 → テスト → レビ
 | [docs/mvp-issues.md](./docs/mvp-issues.md) | 実装タスク37件（依存関係順） |
 | [docs/cases/case-001.md](./docs/cases/case-001.md) | CASE 001「消えた100万円」仕様 ⚠️ネタバレ |
 | [docs/cases/case-002.md](./docs/cases/case-002.md) | CASE 002「改ざんされた在庫」仕様 ⚠️ネタバレ |
-| [docs/cases/case-003.md](./docs/cases/case-003.md) | CASE 003「戻らなかった試作機」設計（実装前） ⚠️ネタバレ |
+| [docs/cases/case-003.md](./docs/cases/case-003.md) | CASE 003「戻らなかった試作機」仕様 ⚠️ネタバレ |
 | [docs/adr/](./docs/adr/) | 技術方針の決定記録 |
 | [AGENTS.md](./AGENTS.md) | AIエージェント／コントリビューター向け規約 |
 | [docs/handoff.md](./docs/handoff.md) | 最初の開発引き継ぎ資料（原本。歴史的記録） |
@@ -130,8 +130,7 @@ SQL中級者を含む3〜5人に通しで遊んでもらい、詰まりどころ
 **Phase 6 で残っているのはこれだけ**で、あとは作者が遊んで挙げた分の対応
 （[roadmap.md](./docs/roadmap.md#phase-6-公開)）まで含めて片付いている。
 
-その先は CASE 003「戻らなかった試作機」。
-設計は [docs/cases/case-003.md](./docs/cases/case-003.md) にあり、実装はこれから。
+CASE は 003「戻らなかった試作機」まで実装済み。その先は CASE 004 以降。
 
 ## ライセンス
 
