@@ -230,7 +230,24 @@ obj-01 → obj-02 → obj-03 → obj-04 → obj-05 ─┬→ obj-06 ─┐
 `quantity` が常に正であること）を、難しい操作抜きで掴ませる。
 ここを飛ばすと obj-03 で「符号をどうするか」と「累積和」を同時に考えることになる。
 
-**obj-03 が主役。** ここだけは Window Function が**代替不能**になるように組んである。
+**obj-03 が主役。** ここだけは `GROUP BY` では**絶対に届かない**ように組んである。
+
+> ⚠️ **訂正（CASE 003 の設計中に判明）**
+>
+> 初版はここを「Window Function が**代替不能**」と書いていたが、**言い過ぎだった。**
+> 相関サブクエリで同じ結果が出ることを実データで確認済み。
+>
+> ```sql
+> WHERE (SELECT SUM(CASE WHEN m2.kind='in' THEN m2.quantity ELSE -m2.quantity END)
+>        FROM movements m2 WHERE m2.product_id = m.product_id
+>          AND (m2.occurred_at, m2.id) <= (m.occurred_at, m.id)) < 0
+> ```
+>
+> 正しくは「**`GROUP BY` では見つからない**」。集計を潰さずに順序を見る必要がある、
+> という設計の意図は変わらないが、**Window Function を必須と読める書き方**は
+> [game-design.md §3](../game-design.md#3-難易度カーブ) の
+> 「高度な構文を必須にしない」に反する。
+> CASE 003 の初版はこの誤解の上に組まれていた。
 
 ```sql
 SUM(CASE WHEN kind='in' THEN quantity ELSE -quantity END)
