@@ -490,6 +490,34 @@ describe('seed.sql の不変条件', () => {
     ]);
   });
 
+  it('飛びは全記録を通して C-1042 の2か所だけ（obj-03 の主張の裏づけ）', () => {
+    // obj-03 は「あの夜の4行が妙だ」ではなく「全記録の中でここだけだ」を問う。
+    // 37件・8枚・5扉のうち、ほかに1件も無いことがその主張の中身。
+    expect(Number(one(`SELECT COUNT(*) FROM access_logs`))).toBe(37);
+    expect(Number(one(`SELECT COUNT(*) FROM cards`))).toBe(8);
+    expect(col(ADJACENT_SAME_DIRECTION)).toEqual(['C-1042', 'C-1042']);
+  });
+
+  it('同じ夜に研究棟を巡回した警備員の記録は、扉ごとに正しく交互（対比）', () => {
+    // ev-03 が「警備員のカードでさえ正しく交互だ」と書いている。その裏づけ。
+    expect(
+      col(`
+        SELECT c.card_number FROM (${ADJACENT_SAME_DIRECTION}) v
+        JOIN cards c ON c.card_number = v.card_number
+        WHERE c.card_number = 'C-1002'`),
+    ).toEqual([]);
+    // 巡回そのものは存在する（記録が無いから交互、ではない）
+    expect(
+      Number(
+        one(`
+          SELECT COUNT(*) FROM access_logs a
+          JOIN cards c ON c.id = a.card_id
+          JOIN doors d ON d.id = a.door_id
+          WHERE c.card_number = 'C-1002' AND d.building = '研究棟'`),
+      ),
+    ).toBe(6);
+  });
+
   it('カードだけで区切ると無関係なカードが混ざる（扉で区切る必然性）', () => {
     const cards = col(`
       SELECT DISTINCT c.card_number FROM (
