@@ -167,6 +167,7 @@ CASE検証テスト47本（正解例30・不正解例22を含む）が緑。
 - [x] CASE 002「改ざんされた在庫」（`#37`。実装済み → [cases/case-002.md](./cases/case-002.md)）
 - [x] CASE 003「戻らなかった試作機」（`#42`。記録の「欠落」を見つける
       → [cases/case-003.md](./cases/case-003.md)）
+- [x] 棚卸し（`#43`。写しを1本にし、設計書と実データのずれを機械が見つけるようにした）
 - CASE 004以降
 - PostgreSQL実行エンジン（[architecture.md §9](./architecture.md#9-postgresql移行の道筋mvpでは実装しない)）
 - アカウント・進捗のサーバー同期

@@ -15,7 +15,8 @@
  * @see docs/cases/case-003.md
  */
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
-import { evaluateChecks, evaluateFinalAnswer } from './checks.ts';
+import { evaluateFinalAnswer } from './checks.ts';
+import { objectiveAssertions } from '../test/objectiveAssertions.ts';
 import { loadCase } from '../test/caseFixture.ts';
 import type { LoadedCase } from '../test/caseFixture.ts';
 
@@ -29,40 +30,7 @@ afterAll(() => {
   c.dispose();
 });
 
-function achieves(objectiveId: string, sql: string): boolean {
-  const checks = c.solution.checks[objectiveId];
-  if (!checks) throw new Error(`checks がありません: ${objectiveId}`);
-  return evaluateChecks(checks, c.run(sql)).passed;
-}
-
-function reasonFor(objectiveId: string, sql: string): string | undefined {
-  const checks = c.solution.checks[objectiveId];
-  if (!checks) throw new Error(`checks がありません: ${objectiveId}`);
-  return evaluateChecks(checks, c.run(sql)).reason;
-}
-
-function expectAllSolve(objectiveId: string, queries: Record<string, string>): void {
-  for (const [label, sql] of Object.entries(queries)) {
-    const passed = achieves(objectiveId, sql);
-    if (!passed) {
-      throw new Error(
-        `${objectiveId} の正解例「${label}」が達成判定されませんでした。\n` +
-          `  理由: ${reasonFor(objectiveId, sql) ?? '(不明)'}\n  SQL: ${sql}`,
-      );
-    }
-    expect(passed).toBe(true);
-  }
-}
-
-function expectNoneSolve(objectiveId: string, queries: Record<string, string>): void {
-  for (const [label, sql] of Object.entries(queries)) {
-    const passed = achieves(objectiveId, sql);
-    if (passed) {
-      throw new Error(`${objectiveId} の不正解例「${label}」が通ってしまいました。\n  SQL: ${sql}`);
-    }
-    expect(passed).toBe(false);
-  }
-}
+const { expectAllSolve, expectNoneSolve } = objectiveAssertions(() => c);
 
 /** 記録の無い通行があった時刻。obj-06 の基準点。 */
 const T = '2026-06-13 02:47:00';
@@ -195,7 +163,7 @@ describe('obj-02 その夜、第3研究室を通ったカードを洗い出す',
   });
 });
 
-describe('obj-03 記録が交互になっていない箇所を探す', () => {
+describe('obj-03 記録の飛びが他にもないか、全期間で確かめる', () => {
   it('正解例が通る', () => {
     expectAllSolve('obj-03', {
       '自己結合 + NOT EXISTS（段階5まで）': ADJACENT_SAME_DIRECTION,

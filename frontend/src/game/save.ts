@@ -22,11 +22,19 @@ export interface SaveEnvelope {
   progress: ProgressState;
 }
 
+/**
+ * セーブを捨てた理由。UIで「進捗をリセットしました」と伝えるのに使う。
+ *
+ * 名前を付けてあるのは、UI側の文言（ui/bootFailure.ts の DISCARD_NOTICE）を
+ * `Record<DiscardReason, string>` で受けるため。理由を足したら、文言を書き
+ * 忘れた時点で型検査が落ちる。
+ */
+export type DiscardReason = 'case-updated' | 'corrupt' | 'format-changed';
+
 export type LoadResult =
   | { kind: 'loaded'; progress: ProgressState }
   | { kind: 'empty' }
-  /** 捨てた理由。UIで「進捗をリセットしました」と伝えるのに使う。 */
-  | { kind: 'discarded'; reason: 'case-updated' | 'corrupt' | 'format-changed' };
+  | { kind: 'discarded'; reason: DiscardReason };
 
 export function saveKey(caseId: string): string {
   return `${KEY_PREFIX}:${caseId}`;

@@ -12,7 +12,8 @@
  * @see docs/case-format.md#8-case追加時のチェックリスト
  */
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
-import { evaluateChecks, evaluateFinalAnswer } from './checks.ts';
+import { evaluateFinalAnswer } from './checks.ts';
+import { objectiveAssertions } from '../test/objectiveAssertions.ts';
 import { loadCase } from '../test/caseFixture.ts';
 import type { LoadedCase } from '../test/caseFixture.ts';
 
@@ -26,44 +27,7 @@ afterAll(() => {
   c.dispose();
 });
 
-/** その Objective の checks に対して、SQL の実行結果が達成判定されるか。 */
-function achieves(objectiveId: string, sql: string): boolean {
-  const checks = c.solution.checks[objectiveId];
-  if (!checks) throw new Error(`checks がありません: ${objectiveId}`);
-  return evaluateChecks(checks, c.run(sql)).passed;
-}
-
-function reasonFor(objectiveId: string, sql: string): string | undefined {
-  const checks = c.solution.checks[objectiveId];
-  if (!checks) throw new Error(`checks がありません: ${objectiveId}`);
-  return evaluateChecks(checks, c.run(sql)).reason;
-}
-
-/** 正解例は「すべて」通らなければならない。落ちたら理由を出す。 */
-function expectAllSolve(objectiveId: string, queries: Record<string, string>): void {
-  for (const [label, sql] of Object.entries(queries)) {
-    const passed = achieves(objectiveId, sql);
-    if (!passed) {
-      throw new Error(
-        `${objectiveId} の正解例「${label}」が達成判定されませんでした。\n` +
-          `  理由: ${reasonFor(objectiveId, sql) ?? '(不明)'}\n  SQL: ${sql}`,
-      );
-    }
-    expect(passed).toBe(true);
-  }
-}
-
-function expectNoneSolve(objectiveId: string, queries: Record<string, string>): void {
-  for (const [label, sql] of Object.entries(queries)) {
-    const passed = achieves(objectiveId, sql);
-    if (passed) {
-      throw new Error(
-        `${objectiveId} の不正解例「${label}」が達成判定されてしまいました。\n  SQL: ${sql}`,
-      );
-    }
-    expect(passed).toBe(false);
-  }
-}
+const { expectAllSolve, expectNoneSolve } = objectiveAssertions(() => c);
 
 // ============================================================================
 // obj-01 不審な高額送金を特定する（SELECT / WHERE / ORDER BY）
@@ -156,9 +120,9 @@ describe('obj-03 送金直前のログイン記録を洗う', () => {
 });
 
 // ============================================================================
-// obj-04 山田咲は本当に社内にいたのか
+// obj-04 山田 咲が在館していたか確認する
 // ============================================================================
-describe('obj-04 山田咲の在館を確認する', () => {
+describe('obj-04 山田 咲が在館していたか確認する', () => {
   it('複数の書き方で到達できる', () => {
     expectAllSolve('obj-04', {
       IDで絞って新しい順: `SELECT * FROM access_logs WHERE employee_id = 7
@@ -188,7 +152,7 @@ describe('obj-04 山田咲の在館を確認する', () => {
 // ============================================================================
 // obj-05 犯行時刻に在館していた人物を割り出す（サブクエリ / GROUP BY）
 // ============================================================================
-describe('obj-05 犯行時刻の在館者を割り出す', () => {
+describe('obj-05 犯行時刻に在館していた人物を割り出す', () => {
   it('集計でもウィンドウ関数でも到達できる', () => {
     expectAllSolve('obj-05', {
       'GROUP BY + MAX でサブクエリ': `
@@ -245,9 +209,9 @@ describe('obj-05 犯行時刻の在館者を割り出す', () => {
 });
 
 // ============================================================================
-// obj-06 端末 10.0.4.112 の持ち主を調べる
+// obj-06 端末 10.0.4.112 の利用者を調べる
 // ============================================================================
-describe('obj-06 端末の持ち主を調べる', () => {
+describe('obj-06 端末 10.0.4.112 の利用者を調べる', () => {
   it('複数の書き方で到達できる', () => {
     expectAllSolve('obj-06', {
       IPで絞ってJOIN: `SELECT e.name, l.ip_address FROM login_logs l
@@ -275,9 +239,9 @@ describe('obj-06 端末の持ち主を調べる', () => {
 });
 
 // ============================================================================
-// obj-07 不正アクセスの痕跡を見つける
+// obj-07 山田アカウントへの不正アクセスの痕跡を探す
 // ============================================================================
-describe('obj-07 不正アクセスの痕跡を見つける', () => {
+describe('obj-07 山田アカウントへの不正アクセスの痕跡を探す', () => {
   it('生ログでも到達できる', () => {
     expectAllSolve('obj-07', {
       山田の失敗を並べる: `SELECT * FROM login_logs WHERE employee_id = 7 AND result = 'failure'
