@@ -1,0 +1,100 @@
+{
+  "obj-01": [
+    {
+      "level": 1,
+      "body": "持ち出し台帳（checkouts）には資産番号がありません。機材ID しか無いので、equipment と繋いでください。"
+    },
+    {
+      "level": 2,
+      "body": "JOIN したら asset_tag = 'TX-7' で絞ります。持ち出した人の名前も要るなら staff とも繋いでください。"
+    },
+    {
+      "level": 3,
+      "body": "SELECT e.asset_tag, s.name, c.checked_out_at, c.returned_at FROM checkouts c JOIN equipment e ON e.id = c.equipment_id JOIN staff s ON s.id = c.staff_id WHERE e.asset_tag = 'TX-7'"
+    }
+  ],
+  "obj-02": [
+    {
+      "level": 1,
+      "body": "入退記録には扉の名前がありません。doors と繋いで door_name = '第3研究室' で絞ります。カード番号も同じで、cards と繋がないと出せません。"
+    },
+    {
+      "level": 2,
+      "body": "時刻は 'YYYY-MM-DD HH:MM:SS' の文字列なので、大小比較でそのまま範囲を切れます。occurred_at >= '2026-06-13 00:00:00' AND occurred_at < '2026-06-13 06:00:00'。"
+    },
+    {
+      "level": 3,
+      "body": "SELECT DISTINCT c.card_number FROM access_logs a JOIN cards c ON c.id = a.card_id JOIN doors d ON d.id = a.door_id WHERE d.door_name = '第3研究室' AND a.occurred_at >= '2026-06-13 00:00:00' AND a.occurred_at < '2026-06-13 06:00:00'"
+    }
+  ],
+  "obj-03": [
+    {
+      "level": 1,
+      "body": "探す範囲は「あの夜の第3研究室」ではありません。**全期間・全カード・全扉**です。ここだけの異常なのかを確かめるのが目的なので、絞ってしまうと確かめたことになりません。\n\nそのうえで「ひとつ前の記録」を SQL で掴む方法を考えます。同じテーブルをもう一度 JOIN して、「同じカード・同じ扉で、自分より前の記録」を相手にすればいい——ただし、それだけだと前の記録が全部くっついてきます。"
+    },
+    {
+      "level": 2,
+      "body": "「**ちょうど1つ前**」にするには、間に何も無いことを言えばよい。a と b の間に別の記録が存在しない、を NOT EXISTS で書きます。そのうえで b.direction = a.direction の行だけ残します。\n\nPARTITION（区切り）に door_id を入れ忘れないこと。扉をまたいで並べると、連絡通路→研究室という普通の動きまで拾ってしまいます。"
+    },
+    {
+      "level": 3,
+      "body": "SELECT c.card_number, a.occurred_at, a.direction FROM access_logs a JOIN access_logs b ON b.card_id = a.card_id AND b.door_id = a.door_id AND b.occurred_at < a.occurred_at AND b.direction = a.direction JOIN cards c ON c.id = a.card_id WHERE NOT EXISTS (SELECT 1 FROM access_logs m WHERE m.card_id = a.card_id AND m.door_id = a.door_id AND m.occurred_at > b.occurred_at AND m.occurred_at < a.occurred_at)\n\n【短く書ける道具】Window関数の LAG を知っていれば、LAG(direction) OVER (PARTITION BY card_id, door_id ORDER BY occurred_at) で「1つ前の向き」が直接取れます。結果は同じです。知らなくても上のやり方で解けます。"
+    }
+  ],
+  "obj-04": [
+    {
+      "level": 1,
+      "body": "「有効」は revoked_on IS NULL です。= NULL とは書けません。"
+    },
+    {
+      "level": 2,
+      "body": "人ごとに有効なカードの枚数を数えて、2枚以上の人だけ残します。GROUP BY と HAVING の出番です。"
+    },
+    {
+      "level": 3,
+      "body": "SELECT s.name, COUNT(*) AS active_cards FROM cards c JOIN staff s ON s.id = c.holder_id WHERE c.revoked_on IS NULL GROUP BY s.id, s.name HAVING COUNT(*) >= 2"
+    }
+  ],
+  "obj-05": [
+    {
+      "level": 1,
+      "body": "カード番号 'C-1187' で絞り、扉は '正面玄関' に限定します。回転扉なので、ここの記録には漏れがありません。"
+    },
+    {
+      "level": 2,
+      "body": "時刻順に並べて、in と out の並びを見てください。最後の out が何時かが答えに効きます。"
+    },
+    {
+      "level": 3,
+      "body": "SELECT c.card_number, a.direction, a.occurred_at FROM access_logs a JOIN cards c ON c.id = a.card_id JOIN doors d ON d.id = a.door_id WHERE c.card_number = 'C-1187' AND d.door_name = '正面玄関' ORDER BY a.occurred_at"
+    }
+  ],
+  "obj-06": [
+    {
+      "level": 1,
+      "body": "「中にいる」を記録からどう定義するかを先に決めます。正面玄関だけを見て、**02:47 より前の、そのカードの最後の記録が in なら中にいる**——これで足ります。"
+    },
+    {
+      "level": 2,
+      "body": "「そのカードの、02:47 以前の最後の記録」は MAX(occurred_at) を相関サブクエリで引けば取れます。日付では区切らないこと。前日から居残っている人がいます。"
+    },
+    {
+      "level": 3,
+      "body": "SELECT s.name FROM access_logs a JOIN doors d ON d.id = a.door_id JOIN cards c ON c.id = a.card_id JOIN staff s ON s.id = c.holder_id WHERE d.door_name = '正面玄関' AND a.direction = 'in' AND a.occurred_at <= '2026-06-13 02:47:00' AND a.occurred_at = (SELECT MAX(a2.occurred_at) FROM access_logs a2 JOIN doors d2 ON d2.id = a2.door_id WHERE a2.card_id = a.card_id AND d2.door_name = '正面玄関' AND a2.occurred_at <= '2026-06-13 02:47:00')\n\n【短く書ける道具】Window関数の LEAD を知っていれば、LEAD(occurred_at) OVER (PARTITION BY card_id ORDER BY occurred_at) で「次の記録」を引き寄せ、in と次の記録のあいだを在館区間として扱えます。結果は同じです。"
+    }
+  ],
+  "obj-07": [
+    {
+      "level": 1,
+      "body": "探すのは「記録がある人」ではなく「**記録が無い人**」です。WHERE では書けません。ある条件を満たす行が存在しないこと、を言う必要があります。"
+    },
+    {
+      "level": 2,
+      "body": "NOT EXISTS の中で、その人の名義のカードが研究棟の扉を通った記録を探します。1件も無ければ、その人が答えです。cards.holder_id と doors.building = '研究棟' が鍵になります。"
+    },
+    {
+      "level": 3,
+      "body": "SELECT s.name FROM staff s WHERE s.name IN ('久我山 慧', '早瀬 拓') AND NOT EXISTS (SELECT 1 FROM access_logs a JOIN cards c ON c.id = a.card_id JOIN doors d ON d.id = a.door_id WHERE c.holder_id = s.id AND d.building = '研究棟')"
+    }
+  ]
+}

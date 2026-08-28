@@ -1,0 +1,162 @@
+{
+  "checks": {
+    "obj-01": [
+      {
+        "type": "containsRows",
+        "columns": [
+          "asset_tag",
+          "returned_at"
+        ],
+        "rows": [
+          [
+            "TX-7",
+            "2026-06-13 03:12:00"
+          ]
+        ],
+        "options": {
+          "maxRows": 4
+        }
+      }
+    ],
+    "obj-02": [
+      {
+        "type": "columnValues",
+        "column": "card_number",
+        "values": [
+          "C-1042"
+        ],
+        "options": {
+          "exact": true,
+          "maxRows": 6
+        }
+      }
+    ],
+    "obj-03": [
+      {
+        "type": "columnValues",
+        "column": "card_number",
+        "values": [
+          "C-1042"
+        ],
+        "options": {
+          "exact": true,
+          "maxRows": 6
+        }
+      }
+    ],
+    "obj-04": [
+      {
+        "type": "columnValues",
+        "column": "name",
+        "values": [
+          "森本 涼"
+        ],
+        "options": {
+          "exact": true,
+          "maxRows": 4
+        }
+      }
+    ],
+    "obj-05": [
+      {
+        "type": "containsRows",
+        "columns": [
+          "card_number",
+          "direction",
+          "occurred_at"
+        ],
+        "rows": [
+          [
+            "C-1187",
+            "out",
+            "2026-06-12 21:48:00"
+          ]
+        ],
+        "options": {
+          "maxRows": 6
+        }
+      }
+    ],
+    "obj-06": [
+      {
+        "type": "columnValues",
+        "column": "name",
+        "values": [
+          "久我山 慧",
+          "早瀬 拓"
+        ],
+        "options": {
+          "exact": true,
+          "maxRows": 2
+        }
+      }
+    ],
+    "obj-07": [
+      {
+        "type": "columnValues",
+        "column": "name",
+        "values": [
+          "久我山 慧"
+        ],
+        "options": {
+          "exact": true,
+          "maxRows": 2
+        }
+      }
+    ]
+  },
+  "exampleSql": {
+    "obj-01": "SELECT e.asset_tag, s.name, c.checked_out_at, c.returned_at\nFROM checkouts c\nJOIN equipment e ON e.id = c.equipment_id\nJOIN staff s ON s.id = c.staff_id\nWHERE e.asset_tag = 'TX-7'",
+    "obj-02": "SELECT DISTINCT c.card_number\nFROM access_logs a\nJOIN cards c ON c.id = a.card_id\nJOIN doors d ON d.id = a.door_id\nWHERE d.door_name = '第3研究室'\n  AND a.occurred_at >= '2026-06-13 00:00:00'\n  AND a.occurred_at <  '2026-06-13 06:00:00'",
+    "obj-03": "-- 同じカード・同じ扉で「ちょうど1つ前」の記録を掴み、向きが同じ行だけ残す\nSELECT c.card_number, a.occurred_at, a.direction\nFROM access_logs a\nJOIN access_logs b\n  ON  b.card_id = a.card_id\n  AND b.door_id = a.door_id\n  AND b.occurred_at < a.occurred_at\n  AND b.direction = a.direction\nJOIN cards c ON c.id = a.card_id\nWHERE NOT EXISTS (\n  SELECT 1 FROM access_logs m\n  WHERE m.card_id = a.card_id AND m.door_id = a.door_id\n    AND m.occurred_at > b.occurred_at\n    AND m.occurred_at < a.occurred_at)\nORDER BY a.occurred_at",
+    "obj-04": "SELECT s.name, COUNT(*) AS active_cards\nFROM cards c\nJOIN staff s ON s.id = c.holder_id\nWHERE c.revoked_on IS NULL\nGROUP BY s.id, s.name\nHAVING COUNT(*) >= 2",
+    "obj-05": "SELECT c.card_number, a.direction, a.occurred_at\nFROM access_logs a\nJOIN cards c ON c.id = a.card_id\nJOIN doors d ON d.id = a.door_id\nWHERE c.card_number = 'C-1187'\n  AND d.door_name = '正面玄関'\nORDER BY a.occurred_at",
+    "obj-06": "-- 02:47 より前の、そのカードの最後の記録が in なら、その人はまだ中にいる\nSELECT s.name\nFROM access_logs a\nJOIN doors d ON d.id = a.door_id\nJOIN cards c ON c.id = a.card_id\nJOIN staff s ON s.id = c.holder_id\nWHERE d.door_name = '正面玄関'\n  AND a.direction = 'in'\n  AND a.occurred_at <= '2026-06-13 02:47:00'\n  AND a.occurred_at = (\n    SELECT MAX(a2.occurred_at)\n    FROM access_logs a2\n    JOIN doors d2 ON d2.id = a2.door_id\n    WHERE a2.card_id = a.card_id\n      AND d2.door_name = '正面玄関'\n      AND a2.occurred_at <= '2026-06-13 02:47:00')\nORDER BY s.name",
+    "obj-07": "SELECT s.name\nFROM staff s\nWHERE s.name IN ('久我山 慧', '早瀬 拓')\n  AND NOT EXISTS (\n    SELECT 1\n    FROM access_logs a\n    JOIN cards c ON c.id = a.card_id\n    JOIN doors d ON d.id = a.door_id\n    WHERE c.holder_id = s.id\n      AND d.building = '研究棟')"
+  },
+  "finalAnswer": {
+    "fields": [
+      {
+        "id": "culprit",
+        "label": "TX-7 を持ち出したのは誰ですか？",
+        "type": "select",
+        "options": [
+          "久我山 慧",
+          "森本 涼",
+          "阿久津 みどり",
+          "早瀬 拓",
+          "里見 佳乃",
+          "中園 修"
+        ],
+        "correct": "久我山 慧"
+      },
+      {
+        "id": "card",
+        "label": "研究棟に入るのに使われたカードの番号は？",
+        "type": "select",
+        "options": [
+          "C-1042",
+          "C-1187",
+          "C-1050",
+          "C-1002",
+          "C-0990"
+        ],
+        "correct": "C-1042"
+      },
+      {
+        "id": "delay",
+        "label": "発覚が朝までずれたのはなぜですか？",
+        "type": "select",
+        "options": [
+          "持ち出し台帳に偽の返却が登録されていたため",
+          "入退館システムが停止していたため",
+          "警備員が巡回を怠っていたため",
+          "第3研究室に防犯カメラが無かったため",
+          "退職者のカードが失効していなかったため"
+        ],
+        "correct": "持ち出し台帳に偽の返却が登録されていたため"
+      }
+    ],
+    "requireAll": true
+  }
+}

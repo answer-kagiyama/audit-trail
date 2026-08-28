@@ -1,0 +1,27 @@
+{
+  "id": "case-003",
+  "version": 1,
+  "title": "戻らなかった試作機",
+  "subtitle": "台帳は返却済みだった",
+  "difficulty": 3,
+  "estimatedMinutes": [
+    40,
+    75
+  ],
+  "sqlConcepts": [
+    "JOIN",
+    "GROUP BY",
+    "HAVING",
+    "自己結合",
+    "NOT EXISTS",
+    "サブクエリ"
+  ],
+  "dialect": "sqlite",
+  "files": {
+    "story": "story.json",
+    "schema": "schema.json",
+    "hints": "hints.json",
+    "solution": "solution.json",
+    "database": "database.sqlite"
+  }
+}
