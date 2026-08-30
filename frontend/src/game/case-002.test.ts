@@ -15,7 +15,8 @@
  * @see docs/cases/case-002.md
  */
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
-import { evaluateChecks, evaluateFinalAnswer } from './checks.ts';
+import { evaluateFinalAnswer } from './checks.ts';
+import { objectiveAssertions } from '../test/objectiveAssertions.ts';
 import { loadCase } from '../test/caseFixture.ts';
 import type { LoadedCase } from '../test/caseFixture.ts';
 
@@ -29,42 +30,7 @@ afterAll(() => {
   c.dispose();
 });
 
-function achieves(objectiveId: string, sql: string): boolean {
-  const checks = c.solution.checks[objectiveId];
-  if (!checks) throw new Error(`checks がありません: ${objectiveId}`);
-  return evaluateChecks(checks, c.run(sql)).passed;
-}
-
-function reasonFor(objectiveId: string, sql: string): string | undefined {
-  const checks = c.solution.checks[objectiveId];
-  if (!checks) throw new Error(`checks がありません: ${objectiveId}`);
-  return evaluateChecks(checks, c.run(sql)).reason;
-}
-
-function expectAllSolve(objectiveId: string, queries: Record<string, string>): void {
-  for (const [label, sql] of Object.entries(queries)) {
-    const passed = achieves(objectiveId, sql);
-    if (!passed) {
-      throw new Error(
-        `${objectiveId} の正解例「${label}」が達成判定されませんでした。\n` +
-          `  理由: ${reasonFor(objectiveId, sql) ?? '(不明)'}\n  SQL: ${sql}`,
-      );
-    }
-    expect(passed).toBe(true);
-  }
-}
-
-function expectNoneSolve(objectiveId: string, queries: Record<string, string>): void {
-  for (const [label, sql] of Object.entries(queries)) {
-    const passed = achieves(objectiveId, sql);
-    if (passed) {
-      throw new Error(
-        `${objectiveId} の不正解例「${label}」が達成判定されてしまいました。\n  SQL: ${sql}`,
-      );
-    }
-    expect(passed).toBe(false);
-  }
-}
+const { expectAllSolve, expectNoneSolve } = objectiveAssertions(() => c);
 
 /** 各時点の帳簿在庫。obj-03 の想定解でも、検算でも使う。 */
 const LEDGER = `
@@ -113,7 +79,7 @@ describe('obj-01 棚卸しの記録を確かめる', () => {
 // ============================================================================
 // obj-02 SX-400 の在庫がどう動いたか洗い出す
 // ============================================================================
-describe('obj-02 SX-400 の入出庫を洗い出す', () => {
+describe('obj-02 SX-400 の在庫がどう動いたか洗い出す', () => {
   it('複数の書き方で到達できる', () => {
     expectAllSolve('obj-02', {
       全行を出す: `SELECT m.* FROM movements m
@@ -210,7 +176,7 @@ describe('obj-03 在庫の推移を再現する', () => {
 // ============================================================================
 // obj-04 破損廃棄に偏りがないか調べる
 // ============================================================================
-describe('obj-04 破損廃棄の偏りを調べる', () => {
+describe('obj-04 破損廃棄に偏りがないか調べる', () => {
   it('複数の書き方で到達できる', () => {
     expectAllSolve('obj-04', {
       比率の降順で先頭: `SELECT p.code,
@@ -248,7 +214,7 @@ describe('obj-04 破損廃棄の偏りを調べる', () => {
 // ============================================================================
 // obj-05 承認されていない廃棄を洗い出す（LEFT JOIN + IS NULL）
 // ============================================================================
-describe('obj-05 承認のない廃棄を洗い出す', () => {
+describe('obj-05 承認されていない廃棄を洗い出す', () => {
   it('複数の書き方で到達できる', () => {
     expectAllSolve('obj-05', {
       'LEFT JOIN + IS NULL': `SELECT m.id FROM movements m
@@ -290,7 +256,7 @@ describe('obj-05 承認のない廃棄を洗い出す', () => {
 // ============================================================================
 // obj-06 後から書き足された記録を洗い出す（列どうしの比較）
 // ============================================================================
-describe('obj-06 遡って登録された記録を洗い出す', () => {
+describe('obj-06 後から書き足された記録を洗い出す', () => {
   it('複数の書き方で到達できる', () => {
     expectAllSolve('obj-06', {
       列どうしを比べるだけ: `SELECT id FROM movements WHERE created_at > occurred_at`,
@@ -326,7 +292,7 @@ describe('obj-06 遡って登録された記録を洗い出す', () => {
 // ============================================================================
 // obj-07 無承認廃棄を繰り返している人物を特定する
 // ============================================================================
-describe('obj-07 記録者を特定する', () => {
+describe('obj-07 無承認廃棄を繰り返している人物を特定する', () => {
   it('複数の書き方で到達できる', () => {
     expectAllSolve('obj-07', {
       'HAVING で2件以上': `SELECT s.name FROM movements m
@@ -352,6 +318,9 @@ describe('obj-07 記録者を特定する', () => {
         WHERE m.kind = 'disposal' AND a.id IS NULL`,
       スタッフ全員: `SELECT name FROM staff`,
       倉庫係全員: `SELECT name FROM staff WHERE role = 'warehouse'`,
+      // 判定は列名で照合するので、products にも name があることを踏まえて置く。
+      // 人ではなく商品を答えてしまった誤答（docs/case-format.md#判定に使う列名の衝突）。
+      商品名を答えてしまった: `SELECT name FROM products WHERE code = 'SX-400'`,
     });
   });
 });

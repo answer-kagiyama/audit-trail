@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { WorkerSqlEngine, browserWorkerFactory } from '../engine/workerEngine.ts';
 import type { SqlEngine } from '../engine/types.ts';
 import { isSqlExecutionError } from '../engine/types.ts';
-import { CaseDataError, loadCaseData } from '../game/caseLoader.ts';
+import { loadCaseData } from '../game/caseLoader.ts';
 import type { CaseData } from '../game/caseTypes.ts';
 import { findEvidence, findStoryBeat } from '../game/caseTypes.ts';
 import { buildSchemaHints, toFriendlyError } from '../game/errorMap.ts';
@@ -24,6 +24,7 @@ import {
 } from '../game/progression.ts';
 import type { ProgressState } from '../game/progression.ts';
 import { clearProgress, loadProgress, saveProgress } from '../game/save.ts';
+import { DISCARD_NOTICE, describeBootFailure } from './bootFailure.ts';
 import { AppShell } from './AppShell/AppShell.tsx';
 import { BootScreen } from './BootScreen/BootScreen.tsx';
 import { DatabasePanel } from './DatabasePanel/DatabasePanel.tsx';
@@ -47,37 +48,9 @@ import {
 import { StoryPanel } from './StoryPanel/StoryPanel.tsx';
 import type { ThemePreference } from './ThemeToggle/theme.ts';
 
-const DISCARD_NOTICE: Record<string, string> = {
-  'case-updated':
-    '事件データが更新されたため、進捗をリセットしました。お手数ですが最初から調査してください。',
-  corrupt: '保存された進捗が読めなかったため、リセットしました。',
-  'format-changed': 'セーブ形式が変わったため、進捗をリセットしました。',
-};
-
 interface Loaded {
   caseData: CaseData;
   hints: SchemaHints;
-}
-
-/**
- * 起動失敗の切り分け。
- *
- * 「読み込めませんでした」だけでは、ネットワークの問題なのか、
- * CASEデータが壊れているのか、ブラウザが対応していないのかが分からない。
- * 直せる人が直せる形で出す（docs/mvp-issues.md #29）。
- */
-function describeBootFailure(error: unknown): string {
-  if (error instanceof CaseDataError) {
-    return `事件データが不正です。\n\n場所: ${error.path}\n${error.message}`;
-  }
-  const message = error instanceof Error ? error.message : String(error);
-  if (/WebAssembly|wasm/i.test(message)) {
-    return `SQL実行エンジンを起動できませんでした。\nこのブラウザが WebAssembly に対応していない可能性があります。\n\n${message}`;
-  }
-  if (/HTTP|fetch|NetworkError|Failed to fetch/i.test(message)) {
-    return `事件データを取得できませんでした。\n通信状況を確認して再読み込みしてください。\n\n${message}`;
-  }
-  return message;
 }
 
 export interface CaseSessionProps {

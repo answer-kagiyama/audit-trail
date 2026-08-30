@@ -192,7 +192,7 @@ obj-01 → obj-02 → obj-03 → obj-04 → obj-05 ─┬→ obj-06 ─┐
 |---|---|---|---|---|
 | **obj-01** | 不審な高額送金を特定する | `SELECT` / `WHERE` / `ORDER BY` | `containsRows` on `transactions.id=4821, amount=1000000` | ev-01: 深夜2時14分の100万円送金 |
 | **obj-02** | 送金アカウントの持ち主を突き止める | `JOIN` | `containsRows` on `name='山田 咲'`（+ `id=4821`） | ev-02: 記録上の実行者は山田 咲 |
-| **obj-03** | 送金前後のログイン記録を洗う | 時刻の範囲条件 | `containsRows` on `ip_address='10.0.4.112', result='success'`（02:09の行） | ev-03: 端末 10.0.4.112 からのログイン |
+| **obj-03** | 送金直前のログイン記録を洗う | 時刻の範囲条件 | `containsRows` on `ip_address='10.0.4.112', result='success'`（02:09の行） | ev-03: 端末 10.0.4.112 からのログイン |
 | **obj-04** | 山田 咲が在館していたか確認する | `JOIN` + `ORDER BY` + 時刻 | `containsRows` on 3/13 19:42 の `out` 行 | ev-04: **山田はその夜オフィスにいなかった** |
 | **obj-05** | 犯行時刻に在館していた人物を割り出す | サブクエリ / `GROUP BY` | `columnValues` on `name` = `['田中 誠']`, `exact: true` | ev-05: 在館者は田中 誠ただ一人 |
 | **obj-06** | 端末 10.0.4.112 の利用者を調べる | `WHERE` + `JOIN` | `containsRows` on `name='田中 誠', ip_address='10.0.4.112'`（01:50の行） | ev-06: 同じ端末を田中が使っていた |
